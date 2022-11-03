@@ -1,0 +1,8 @@
+click
+sqlalchemy
+psycopg2
+sqlalchemy-utils
+fastapi
+fastapi-login
+bcrypt
+python-multipart
