@@ -1,3 +1,4 @@
+from typing import List
 from sqlalchemy.orm import sessionmaker, Session
 from .models import Base
 from . import database, schemas, user_ops
@@ -54,3 +55,33 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 
     access_token = manager.create_access_token(data=dict(sub=user.name))
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.get("/sample_sets", response_model=List[schemas.SampleSet])
+def list_sample_sets():
+    pass
+
+
+@app.get("/sample_sets/{sample_id}", response_model=schemas.SampleSetDetail)
+def sample_set_detail(sample_id: int):
+    pass
+
+
+@app.get("/label_types", response_model=List[schemas.LabelType])
+def get_labelling():
+    pass
+
+
+@app.get("/labels/{label_id}", response_model=schemas.Label)
+def get_label(label_id: int):
+    pass
+
+
+@app.post("/labels")
+def create_label(label: schemas.Label):
+    pass
+
+
+@app.get("/sample/{sample_id}/audio")
+def get_audio_data(sample_id: int):
+    pass
