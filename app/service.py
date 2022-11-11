@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import sessionmaker, Session
 
 from . import schemas
@@ -42,32 +42,34 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 
-@manager.user_loader()
-def load_user(name: str, db: Session):
+@manager.user_loader(db_provider=get_db)
+def load_user(name: str, db: Optional[Session] = None, db_provider=None):
+    if db is None:
+        db = next(db_provider())
     return user_ops.get_user_by_name(db, name)
 
 
 @app.post("/auth/token", tags=["users"])
 def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = load_user(data.username, db)
+    user = load_user(data.username, db=db)
     if not user:
         raise InvalidCredentialsException  # you can also use your own HTTPException
     elif not user_ops.check_user_password(user, data.password):
         raise InvalidCredentialsException
 
     access_token = manager.create_access_token(data=dict(sub=user.name))
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token}
 
 
 @app.get("/sample_sets", response_model=List[schemas.SampleSet], tags=["samples"])
-def list_sample_sets():
+def list_sample_sets(user=Depends(manager)):
     pass
 
 
 @app.get(
     "/sample_sets/{sample_id}", response_model=schemas.SampleSetDetail, tags=["samples"]
 )
-def sample_set_detail(sample_id: int):
+def sample_set_detail(sample_id: int, user=Depends(manager)):
     pass
 
 
@@ -77,21 +79,21 @@ def get_labelling():
 
 
 @app.get("/labels/{label_id}", response_model=schemas.Label, tags=["labels"])
-def get_label(label_id: int):
+def get_label(label_id: int, user=Depends(manager)):
     pass
 
 
 @app.post("/labels", tags=["labels"])
-def create_label(label: schemas.Label):
+def create_label(label: schemas.Label, user=Depends(manager)):
     pass
 
 
 @app.get("/samples/{sample_id}/audio", tags=["samples"])
-def get_audio_data(sample_id: int):
+def get_audio_data(sample_id: int, user=Depends(manager)):
     pass
 
 
 @app.post("/samples", tags=["samples"])
-def upload_sample(file: UploadFile):
+def upload_sample(file: UploadFile, user=Depends(manager)):
     # TODO compute hash and check for duplicties
     pass
