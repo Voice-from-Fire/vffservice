@@ -1,8 +1,10 @@
 from typing import List
 from sqlalchemy.orm import sessionmaker, Session
+
+from . import schemas
 from .models import Base
-from . import database, schemas, user_ops
-from fastapi import Depends, FastAPI, HTTPException
+from . import database, user_ops
+from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
@@ -31,7 +33,7 @@ def get_db():
 app = FastAPI(debug=True)
 
 
-@app.post("/users/", response_model=schemas.User)
+@app.post("/users/", response_model=schemas.User, tags=["users"])
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = user_ops.get_user_by_name(db, user.name)
     if db_user:
@@ -45,7 +47,7 @@ def load_user(name: str, db: Session):
     return user_ops.get_user_by_name(db, name)
 
 
-@app.post("/auth/token")
+@app.post("/auth/token", tags=["users"])
 def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = load_user(data.username, db)
     if not user:
@@ -57,31 +59,39 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/sample_sets", response_model=List[schemas.SampleSet])
+@app.get("/sample_sets", response_model=List[schemas.SampleSet], tags=["samples"])
 def list_sample_sets():
     pass
 
 
-@app.get("/sample_sets/{sample_id}", response_model=schemas.SampleSetDetail)
+@app.get(
+    "/sample_sets/{sample_id}", response_model=schemas.SampleSetDetail, tags=["samples"]
+)
 def sample_set_detail(sample_id: int):
     pass
 
 
-@app.get("/label_types", response_model=List[schemas.LabelType])
+@app.get("/label_types", response_model=List[schemas.LabelType], tags=["labels"])
 def get_labelling():
     pass
 
 
-@app.get("/labels/{label_id}", response_model=schemas.Label)
+@app.get("/labels/{label_id}", response_model=schemas.Label, tags=["labels"])
 def get_label(label_id: int):
     pass
 
 
-@app.post("/labels")
+@app.post("/labels", tags=["labels"])
 def create_label(label: schemas.Label):
     pass
 
 
-@app.get("/sample/{sample_id}/audio")
+@app.get("/samples/{sample_id}/audio", tags=["samples"])
 def get_audio_data(sample_id: int):
+    pass
+
+
+@app.post("/samples", tags=["samples"])
+def upload_sample(file: UploadFile):
+    # TODO compute hash and check for duplicties
     pass
