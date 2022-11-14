@@ -1,10 +1,16 @@
 from sqlalchemy.orm import Session
-from . import models, schemas
+
+from ..db import models
+from .. import schemas
 import bcrypt
 
 
 def get_user_by_name(db: Session, name: str) -> models.User:
     return db.query(models.User).filter(models.User.name == name).first()
+
+
+def remove_user(db: Session, user_id: int):
+    db.query(models.User).filter_by(id=user_id).delete()
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:

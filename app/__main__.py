@@ -2,8 +2,10 @@ import click
 import os
 import math
 from random import Random
-from . import db, ffmpeg
-from .models import AudioFile, SampleSet, Sample, Base
+
+from .tools import ffmpeg
+from . import db
+from .db.models import AudioFile, SampleSet, Sample, Base
 from sqlalchemy.orm import Session
 
 
