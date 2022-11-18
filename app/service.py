@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import sessionmaker, Session
 
 import app.ops.user as ops_user
+import app.ops.audiofiles as ops_files
 
 from . import schemas
 from .db.models import Base
@@ -105,9 +106,11 @@ def get_audio_data(sample_id: int, user=Depends(manager)):
     pass
 
 
-@app.post("/audio", tags=["audio"])
-async def upload_sample(file: UploadFile, user=Depends(manager)):
+@app.post("/audio", response_model=int, tags=["audio"])
+async def upload_sample(
+    file: UploadFile, user=Depends(manager), db: Session = Depends(get_db)
+):
     # TODO check size of file
     # TODO check that file is really audio
     # TODO compute hash and check for duplicties
-    pass
+    return ops_files.create_audiofile(db, file.file, user)

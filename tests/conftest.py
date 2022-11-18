@@ -6,7 +6,8 @@ import string
 from fastapi.security import OAuth2PasswordRequestForm
 
 
-TEST_DIRECTORY = os.path.dirname(__file__)
+TEST_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
+ASSETS_DIRECTORY = os.path.join(TEST_DIRECTORY, "assets")
 ROOT_DIRECTORY = os.path.dirname(TEST_DIRECTORY)
 
 sys.path.insert(0, ROOT_DIRECTORY)
@@ -15,6 +16,8 @@ sys.path.insert(0, ROOT_DIRECTORY)
 from app import schemas
 from app.service import get_db, login
 from app.ops.user import create_user, remove_user
+from app.ops.audiofiles import configure_filestore
+
 
 TESTUSER_PASSWORD = "testuserxx"
 
@@ -46,3 +49,16 @@ def auth(user, db_session):
     )
     token = response["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture()
+def test_wav():
+    return os.path.join(ASSETS_DIRECTORY, "test.wav")
+
+
+@pytest.fixture(autouse=True)
+def filestorage(tmpdir):
+    data_dir = tmpdir / "data"
+    data_dir.mkdir()
+    configure_filestore(str(data_dir))
+    return str(data_dir)

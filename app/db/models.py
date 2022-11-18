@@ -16,12 +16,16 @@ class User(Base):
     name = Column(String)
     hashed_password = Column(LargeBinary)
 
+    audio_files = relationship("AudioFile", cascade="all, delete-orphan")
+
 
 class AudioFile(Base):
     __tablename__ = "audio_file"
 
-    name = Column(String, primary_key=True)
+    id = Column(Integer, Identity(start=10), primary_key=True)
+    filename = Column(String)
     duration = Column(Float)
+    owner = Column(Integer, ForeignKey("vff_user.id"))
 
 
 class SampleSet(Base):
@@ -38,5 +42,5 @@ class Sample(Base):
     id = Column(Integer, Identity(start=100), primary_key=True)
     start = Column(Float)
     duration = Column(Float)
-    audio_file = Column(String, ForeignKey("audio_file.name"))
+    audio_file = Column(Integer, ForeignKey("audio_file.id"))
     sample_set_id = Column(Integer, ForeignKey("sample_set.id"))

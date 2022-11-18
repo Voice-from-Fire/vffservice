@@ -10,7 +10,10 @@ def get_user_by_name(db: Session, name: str) -> models.User:
 
 
 def remove_user(db: Session, user_id: int):
+    # TODO: Delete files from storage
+    db.query(models.AudioFile).filter_by(owner=user_id).delete()
     db.query(models.User).filter_by(id=user_id).delete()
+    db.commit()
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
