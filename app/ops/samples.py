@@ -1,4 +1,6 @@
-from ..db.models import User, AudioFile
+from typing import List
+
+from ..db.models import User, AudioFile, Sample
 from sqlalchemy.orm import Session
 from shutil import copyfileobj
 import uuid
@@ -16,7 +18,7 @@ def configure_filestore(path: str):
     FILESTORE_PATH = path
 
 
-def create_audiofile(db: Session, file, user: User) -> int:
+def create_sample(db: Session, file, user: User) -> int:
     filename = str(uuid.uuid4()) + ".wav"
     fullpath = os.path.join(FILESTORE_PATH, filename)
     file.seek(0)
@@ -25,8 +27,10 @@ def create_audiofile(db: Session, file, user: User) -> int:
         with open(fullpath, "wb") as f:
             copyfileobj(file, f)
         duration = ffmpeg.get_duration(fullpath)
-        audio_file = AudioFile(filename=filename, duration=duration, owner=user.id)
-        db.add(audio_file)
+        sample = Sample(duration=duration, owner=user.id)
+        audio_file = AudioFile(path=filename, original=True)
+        sample.audio_files.append(audio_file)
+        db.add(sample)
         db.commit()
     except Exception as e:
         logger.info(f"Upload fails, removing file {fullpath}")
@@ -34,3 +38,7 @@ def create_audiofile(db: Session, file, user: User) -> int:
         raise e
     # db.refresh(audio_file)
     return audio_file.id
+
+
+def get_samples(db: Session, user: User) -> List[Sample]:
+    return db.query(Sample).filter(Sample.owner == user.id).all()

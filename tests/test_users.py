@@ -37,10 +37,10 @@ def test_create_user(db_session):
 
 
 def test_no_authaccess():
-    r = client.get("/samples")
+    r = client.get("/audio")
     assert r.status_code == 401
 
 
 def test_authaccess(auth):
-    r = client.get("/samples", headers=auth)
+    r = client.get("/audio", headers=auth)
     assert r.status_code == 200

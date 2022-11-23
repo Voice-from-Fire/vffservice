@@ -16,7 +16,7 @@ sys.path.insert(0, ROOT_DIRECTORY)
 from app import schemas
 from app.service import get_db, login
 from app.ops.user import create_user, remove_user
-from app.ops.audiofiles import configure_filestore
+from app.ops.samples import configure_filestore
 
 
 TESTUSER_PASSWORD = "testuserxx"

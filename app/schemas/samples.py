@@ -3,6 +3,16 @@ from enum import Enum
 from pydantic import BaseModel
 
 
+class Sample(BaseModel):
+    id: int
+    duration: float
+    owner: int
+
+    class Config:
+        orm_mode = True
+
+
+"""
 class SampleSet(BaseModel):
     id: int
     name: str
@@ -53,3 +63,4 @@ class Label(BaseModel):
 
     labelling_type: LabelCategory
     labels: List[LabelInstance]
+"""

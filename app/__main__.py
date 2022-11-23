@@ -5,7 +5,7 @@ from random import Random
 
 from .tools import ffmpeg
 from . import db
-from .db.models import AudioFile, SampleSet, Sample, Base
+from .db.models import AudioFile, Sample, Base
 from sqlalchemy.orm import Session
 
 

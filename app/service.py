@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import sessionmaker, Session
 
 import app.ops.user as ops_user
-import app.ops.audiofiles as ops_files
+import app.ops.samples as ops_files
 
 from . import schemas
 from .db.models import Base
@@ -55,8 +55,8 @@ def load_user(name: str, db: Optional[Session] = None, db_provider=None):
 @app.post("/auth/token", tags=["users"])
 def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = load_user(data.username, db=db)
-    if not user:
-        raise InvalidCredentialsException  # you can also use your own HTTPException
+    if not user or not user.active:
+        raise InvalidCredentialsException
     elif not ops_user.check_user_password(user, data.password):
         raise InvalidCredentialsException
 
@@ -64,6 +64,22 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     return {"access_token": access_token}
 
 
+@app.post("/audio", response_model=int, tags=["audio"])
+async def upload_sample(
+    file: UploadFile, user=Depends(manager), db: Session = Depends(get_db)
+):
+    # TODO check size of file
+    # TODO check that file is really audio
+    # TODO compute hash and check for duplicties
+    return ops_files.create_sample(db, file.file, user)
+
+
+@app.get("/audio", response_model=List[schemas.Sample], tags=["audio"])
+def get_own_audiofiles(user=Depends(manager), db: Session = Depends(get_db)):
+    return ops_files.get_samples(db, user)
+
+
+"""
 @app.get("/sample_sets", response_model=List[schemas.SampleSet], tags=["samples"])
 def list_sample_sets(user=Depends(manager)):
     pass
@@ -96,21 +112,7 @@ def get_next_sample_for_labelling(user=Depends(manager)):
     return 10
 
 
-@app.get("/audio", tags=["audio"])
-def get_own_audiofiles(user=Depends(manager)):
-    return []
-
-
 @app.get("/samples/{sample_id}/audio", tags=["samples"])
 def get_audio_data(sample_id: int, user=Depends(manager)):
     pass
-
-
-@app.post("/audio", response_model=int, tags=["audio"])
-async def upload_sample(
-    file: UploadFile, user=Depends(manager), db: Session = Depends(get_db)
-):
-    # TODO check size of file
-    # TODO check that file is really audio
-    # TODO compute hash and check for duplicties
-    return ops_files.create_audiofile(db, file.file, user)
+"""
