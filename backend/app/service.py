@@ -13,6 +13,7 @@ from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login.exceptions import InvalidCredentialsException
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # TODO
@@ -34,7 +35,20 @@ def get_db():
         db.close()
 
 
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
 app = FastAPI(debug=True)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/users", response_model=schemas.User, tags=["users"])
