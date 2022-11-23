@@ -42,3 +42,7 @@ def create_sample(db: Session, file, user: User) -> int:
 
 def get_samples(db: Session, user: User) -> List[Sample]:
     return db.query(Sample).filter(Sample.owner == user.id).all()
+
+
+def get_sample(db: Session, session_id: int) -> Sample:
+    return db.query(Sample).filter(Sample.id == session_id).first()

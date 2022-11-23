@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import sessionmaker, Session
 
 import app.ops.user as ops_user
-import app.ops.samples as ops_files
+import app.ops.samples as ops_samples
 
 from . import schemas
 from .db.models import Base
@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login.exceptions import InvalidCredentialsException
+from fastapi.responses import FileResponse
 
 
 # TODO
@@ -64,19 +65,29 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     return {"access_token": access_token}
 
 
-@app.post("/audio", response_model=int, tags=["audio"])
+@app.post("/samples", response_model=int, tags=["samples"])
 async def upload_sample(
     file: UploadFile, user=Depends(manager), db: Session = Depends(get_db)
 ):
     # TODO check size of file
     # TODO check that file is really audio
     # TODO compute hash and check for duplicties
-    return ops_files.create_sample(db, file.file, user)
+    return ops_samples.create_sample(db, file.file, user)
 
 
-@app.get("/audio", response_model=List[schemas.Sample], tags=["audio"])
-def get_own_audiofiles(user=Depends(manager), db: Session = Depends(get_db)):
-    return ops_files.get_samples(db, user)
+@app.get("/samples", response_model=List[schemas.Sample], tags=["samples"])
+def get_own_samples(user=Depends(manager), db: Session = Depends(get_db)):
+    return ops_samples.get_samples(db, user)
+
+
+@app.get("/sample/{sample_id}/audio", tags=["samples"])
+def get_audio(sample_id: int, user=Depends(manager), db: Session = Depends(get_db)):
+    sample = ops_samples.get_sample(db, sample_id)
+    if sample is None:
+        raise HTTPException(status_code=404, detail="Sample not found")
+    if sample.owner != user.id:
+        raise HTTPException(status_code=402)
+    return b"111"
 
 
 """

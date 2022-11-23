@@ -16,7 +16,7 @@ sys.path.insert(0, ROOT_DIRECTORY)
 from app import schemas
 from app.service import get_db, login
 from app.ops.user import create_user, remove_user
-from app.ops.samples import configure_filestore
+from app.ops.samples import configure_filestore, create_sample
 
 
 TESTUSER_PASSWORD = "testuserxx"
@@ -62,3 +62,9 @@ def filestorage(tmpdir):
     data_dir.mkdir()
     configure_filestore(str(data_dir))
     return str(data_dir)
+
+
+@pytest.fixture()
+def sample(db_session, test_wav, user, filestorage):
+    with open(test_wav, "rb") as f:
+        return create_sample(db_session, f, user)

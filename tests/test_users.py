@@ -36,11 +36,8 @@ def test_create_user(db_session):
     assert get_user_by_name(db_session, username) is None
 
 
-def test_no_authaccess():
-    r = client.get("/audio")
-    assert r.status_code == 401
-
-
 def test_authaccess(auth):
-    r = client.get("/audio", headers=auth)
+    r = client.get("/samples")
+    assert r.status_code == 401
+    r = client.get("/samples", headers=auth)
     assert r.status_code == 200
