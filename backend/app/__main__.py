@@ -4,7 +4,7 @@ import math
 from random import Random
 
 from .tools import ffmpeg
-from . import db
+from .db.database import init_db
 from .db.models import AudioFile, Sample, Base
 from sqlalchemy.orm import Session
 
@@ -20,7 +20,7 @@ def cli():
 @cli.command()
 def initdb():
     click.echo("Initialized the database")
-    db.init_db()
+    init_db()
 
 
 @cli.command("sync-datasets")
@@ -66,7 +66,8 @@ def create_samples(name: str, count: int, duration: float, seed: str):
     rnd = Random(seed)
     with session.begin():
         audio_files = (
-            session.query(AudioFile).where(AudioFile.duration >= duration).all()
+            session.query(AudioFile).where(
+                AudioFile.duration >= duration).all()
         )
 
         sample_set = SampleSet(name=name)
