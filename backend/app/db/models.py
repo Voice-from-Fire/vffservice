@@ -16,7 +16,7 @@ class User(Base):
 
     id = Column(Integer, Identity(start=10), primary_key=True)
 
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     hashed_password = Column(LargeBinary, nullable=False)
     active = Column(Boolean, nullable=False)
 

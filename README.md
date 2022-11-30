@@ -11,7 +11,7 @@ Installation
 
 ```
 $ cd backend
-$ python3 -m app initdb
+$ python3 -m app initdb --create-test-user
 ```
 
 Start
