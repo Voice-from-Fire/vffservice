@@ -7,6 +7,7 @@ import { OpenAPI, UsersService, SamplesService, Body_login_auth_token_post } fro
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,7 +15,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <RecoilRoot>
+        <App />
+      </RecoilRoot>
     </BrowserRouter>
   </React.StrictMode>
 );

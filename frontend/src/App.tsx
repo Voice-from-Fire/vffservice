@@ -1,17 +1,44 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-import User from './common/User';
-import { Button, Container, Nav, Navbar, Stack } from 'react-bootstrap';
-import { Link, Routes, Route, Outlet } from 'react-router-dom';
+import User, { LoggedUser } from './common/User';
+import { Alert, Button, Container, Nav, Navbar, Stack } from 'react-bootstrap';
+import { Link, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 
 import { Login } from './components/Login';
 import { SampleList } from './components/Samples';
 import { About } from './components/About';
-import { AppCtx } from './common/AppContext';
+import { useRecoilValue } from 'recoil';
+import { ErrorAtom } from './common/Error';
+
+
+const ErrorBar = () => {
+  //const error = useRecoilValue(ErrorAtom);
+  const location = useLocation();
+  console.log(location.state)  ;
+  if (location.state && location.state.error) {
+      return <Alert variant="danger">{location.state.error.message}</Alert>
+  } else {
+    return <></>;
+  }
+}
 
 const Layout = () => {
-  const appContext = useContext(AppCtx);
+  const location =  useLocation();
+  const user = useRecoilValue(LoggedUser);
+  const RenderLinks = () => {
+    if (!user) { return <>
+      <Nav.Link as={Link} to="login">Login</Nav.Link>
+    </>
+   } else {
+    return <>
+      <Nav.Link as={Link} to="samples">My samples</Nav.Link>
+      <Nav.Link as={Link} to="labels">Label others</Nav.Link>
+      <Nav.Link as={Link} to="labels">Logout</Nav.Link>
+      <Navbar.Text>Logged as {user.name}</Navbar.Text>
+    </>
+   }
+  }
   return <div className="App">
     <Navbar bg="dark" variant="dark">
       <Container>
@@ -19,21 +46,11 @@ const Layout = () => {
         <Nav className="me-auto">
           <Nav.Link as={Link} to="about">About</Nav.Link>
 
-          {
-            <>
-              <Nav.Link as={Link} to="login">Login</Nav.Link>
-            </>
-          }
-          {
-            <>
-              <Nav.Link as={Link} to="samples">My samples</Nav.Link>
-              <Nav.Link as={Link} to="labels">Label others</Nav.Link>
-              <Nav.Link as={Link} to="labels">Logout</Nav.Link>
-            </>
-          }
+          <RenderLinks/>
         </Nav>
       </Container>
     </Navbar>
+    <ErrorBar key={location.pathname}/>
     <Outlet />
   </div>
 }
