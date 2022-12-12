@@ -7,10 +7,10 @@ import app.ops.samples as ops_samples
 from app.ops.audit_log import add_audit_log
 
 from . import schemas
+from .db.session import get_db
 from .db.models import AuditLog, Base, EventType, User, Role
 from .db import database
-from .db.session import get_db
-from fastapi import Depends, FastAPI, HTTPException, Response, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import JSONResponse
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
@@ -26,8 +26,7 @@ APP_SECRET = "todo-load-secret-from-somewhere"
 manager = LoginManager(APP_SECRET, token_url="/auth/token")
 
 origins = [
-    "http://localhost",
-    "http://localhost:3000",
+    "*",
 ]
 
 app = FastAPI(debug=True)
@@ -125,7 +124,10 @@ def get_all_users(user: User = Depends(manager), db: Session = Depends(get_db)):
 
 @app.post("/samples", response_model=int, tags=["samples"])
 async def upload_sample(
-    file: UploadFile, user=Depends(manager), db: Session = Depends(get_db)
+    name: str = Form(),
+    file: UploadFile = File(),
+    user=Depends(manager),
+    db: Session = Depends(get_db),
 ):
     # TODO check size of file
     # TODO check that file is really audio
