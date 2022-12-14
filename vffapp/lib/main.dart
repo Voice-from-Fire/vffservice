@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vffapp/screens/LoginScreen.dart';
+import 'package:vffapp/screens/RecordScreen.dart';
 
 void main() {
   runApp(const VffApp());
@@ -17,6 +18,7 @@ class VffApp extends StatelessWidget {
         ),
         routes: {
           '/': (context) => const LoginScreen(),
+          '/records': (context) => const RecordScreen(),
         });
   }
 }
