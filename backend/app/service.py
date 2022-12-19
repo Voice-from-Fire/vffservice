@@ -7,6 +7,7 @@ import app.ops.samples as ops_samples
 from . import schemas
 from .db.models import Base
 from .db import database
+from .db.models import User
 from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi_login import LoginManager
@@ -96,9 +97,7 @@ def get_own_samples(user=Depends(manager), db: Session = Depends(get_db)):
 
 
 @app.get("/samples/{sample_id}/audio", tags=["samples"])
-async def get_audio(
-    sample_id: int, user=Depends(manager), db: Session = Depends(get_db)
-):
+def get_audio(sample_id: int, user=Depends(manager), db: Session = Depends(get_db)):
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
@@ -106,6 +105,13 @@ async def get_audio(
         raise HTTPException(status_code=402)
     stream = ops_samples.get_sample_stream(sample)
     return StreamingResponse(stream)
+
+
+@app.get("/samples/next", response_model=Optional[int], tags=["samples"])
+def get_next_sample_for_labelling(
+    user: User = Depends(manager), db: Session = Depends(get_db)
+):
+    return ops_samples.get_next_sample_id(db, user)
 
 
 """

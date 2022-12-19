@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from ..db.models import User, AudioFile, Sample
+from ..db.models import User, AudioFile, Sample, Label
 from sqlalchemy.orm import Session
 from shutil import copyfileobj
 import uuid
@@ -55,3 +55,12 @@ def get_sample_stream(sample: Sample):
     fullpath = os.path.join(FILESTORE_PATH, audio_file.path)
     with open(fullpath, mode="rb") as f:
         yield from f
+
+
+def get_next_sample_id(db: Session, user: User) -> Optional[int]:
+    # TODO: This is simple version for protytpe
+    return (
+        db.query(Sample)
+        .filter(Sample.labels.filter(Label.creator != user).any())
+        .first()
+    )

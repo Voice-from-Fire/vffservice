@@ -30,6 +30,15 @@ def test_upload_file(test_wav, auth, user):
         assert r.content == f.read()
 
 
+def test_sample(sample, auth):
+    pass
+    # Depends on sample to force that at least one sample exists
+
+    # TODO
+    #r = client.get(f"/samples/next", headers=auth)
+    #assert r.status_code == 200
+    #assert sample == r.json()
+
 # def test_download_sample(auth, sample):
 #     r = client.get(f"/samples/{sample}", headers=auth)
 #     assert r.status_code == 200

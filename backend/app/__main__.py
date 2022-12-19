@@ -28,6 +28,7 @@ def initdb(create_test_user):
     init_db()
     if create_test_user:
         from .service import get_db
+
         session = next(get_db())
         try:
             create_user(session, UserCreate(name="testuser", password="pass"))
@@ -79,8 +80,7 @@ def create_samples(name: str, count: int, duration: float, seed: str):
     rnd = Random(seed)
     with session.begin():
         audio_files = (
-            session.query(AudioFile).where(
-                AudioFile.duration >= duration).all()
+            session.query(AudioFile).where(AudioFile.duration >= duration).all()
         )
 
         sample_set = SampleSet(name=name)
