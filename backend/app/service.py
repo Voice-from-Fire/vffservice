@@ -14,6 +14,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login.exceptions import InvalidCredentialsException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 
 # TODO
@@ -94,14 +95,17 @@ def get_own_samples(user=Depends(manager), db: Session = Depends(get_db)):
     return ops_samples.get_samples(db, user)
 
 
-@app.get("/sample/{sample_id}/audio", tags=["samples"])
-def get_audio(sample_id: int, user=Depends(manager), db: Session = Depends(get_db)):
+@app.get("/samples/{sample_id}/audio", tags=["samples"])
+async def get_audio(
+    sample_id: int, user=Depends(manager), db: Session = Depends(get_db)
+):
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
     if sample.owner != user.id:
         raise HTTPException(status_code=402)
-    return b"111"
+    stream = ops_samples.get_sample_stream(sample)
+    return StreamingResponse(stream)
 
 
 """

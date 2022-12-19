@@ -42,7 +42,7 @@
 	// This can be used to network with other containers or the host.
 	// "forwardPorts": [5000, 5432],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install --user -r backend/requirements.txt; pip install uvicorn pytest httpx",
+	"postCreateCommand": "apt update; apt install postgresql-client-13; pip install --user -r backend/requirements.txt; pip install uvicorn pytest httpx",
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode"
 }

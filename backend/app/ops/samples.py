@@ -8,6 +8,7 @@ import os
 import logging
 from ..tools import ffmpeg
 
+
 FILESTORE_PATH = "/data"
 
 logger = logging.Logger(__name__)
@@ -26,9 +27,10 @@ def create_sample(db: Session, file, user: User) -> int:
     try:
         with open(fullpath, "wb") as f:
             copyfileobj(file, f)
+        size = os.path.getsize(fullpath)
         duration = ffmpeg.get_duration(fullpath)
         sample = Sample(duration=duration, owner=user.id)
-        audio_file = AudioFile(path=filename, original=True)
+        audio_file = AudioFile(path=filename, original=True, size=size)
         sample.audio_files.append(audio_file)
         db.add(sample)
         db.commit()
@@ -46,3 +48,10 @@ def get_samples(db: Session, user: User) -> List[Sample]:
 
 def get_sample(db: Session, session_id: int) -> Sample:
     return db.query(Sample).filter(Sample.id == session_id).first()
+
+
+def get_sample_stream(sample: Sample):
+    audio_file: AudioFile = sample.audio_files[0]
+    fullpath = os.path.join(FILESTORE_PATH, audio_file.path)
+    with open(fullpath, mode="rb") as f:
+        yield from f

@@ -21,7 +21,7 @@ class User(Base):
     active = Column(Boolean, nullable=False)
 
     samples = relationship("Sample", cascade="all, delete-orphan")
-    sessions = relationship("LabelingSession", cascade="all, delete-orphan")
+    labels = relationship("Label", cascade="all, delete-orphan")
 
 
 class Sample(Base):
@@ -53,15 +53,7 @@ class AudioFile(Base):
     path = Column(String, nullable=False)
     original = Column(Boolean, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-
-
-class LabelingSession(Base):
-    __tablename__ = "label_session"
-    id = Column(Integer, Identity(start=10), primary_key=True)
-    user = Column(
-        Integer, ForeignKey("vff_user.id", ondelete="CASCADE"), nullable=False
-    )
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    size = Column(Integer, nullable=False)
 
 
 @enum.unique
@@ -85,8 +77,8 @@ class Label(Base):
 
     id = Column(Integer, Identity(start=10), primary_key=True)
 
-    session = Column(
-        Integer, ForeignKey("label_session.id", ondelete="CASCADE"), nullable=False
+    creator = Column(
+        Integer, ForeignKey("vff_user.id", ondelete="CASCADE"), nullable=False
     )
     sample = Column(
         Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
