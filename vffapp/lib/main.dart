@@ -16,9 +16,10 @@ class VffApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.orange,
         ),
+        initialRoute: '/',
         routes: {
           '/': (context) => const LoginScreen(),
-          '/records': (context) => const RecordScreen(),
+          RecordScreen.route: (context) => const RecordScreen(),
         });
   }
 }

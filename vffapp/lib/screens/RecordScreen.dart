@@ -4,6 +4,8 @@ import 'package:vffapp/components/MainBar.dart';
 class RecordScreen extends StatelessWidget {
   const RecordScreen({super.key});
 
+  static const String route = '/records';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

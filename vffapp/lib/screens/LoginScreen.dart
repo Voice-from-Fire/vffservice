@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vffapp/screens/RecordScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,6 +35,10 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void doLogin(BuildContext context) {
+    Navigator.of(context).pushNamed("/");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,13 +50,20 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text('Voice From Fire',
               style: Theme.of(context).textTheme.headline2),
         ),
-        TextField(controller: nameController),
-        TextField(
-            controller: passwordController,
-            obscureText: true,
-            enableSuggestions: false,
-            autocorrect: false),
-        ElevatedButton(onPressed: () {}, child: Text("Login"))
+        SizedBox(
+            width: 300,
+            child: Column(children: [
+              TextField(controller: nameController),
+              TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false),
+              Padding(
+                  padding: EdgeInsets.only(top: 15),
+                  child: ElevatedButton(
+                      onPressed: () => doLogin(context), child: Text("Login")))
+            ]))
       ],
     ));
   }
