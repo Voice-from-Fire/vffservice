@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from ..db.models import User, AudioFile, Sample, Label
+from ..db.models import SampleState, User, AudioFile, Sample, Label
 from sqlalchemy.orm import Session
 from shutil import copyfileobj
 import uuid
@@ -58,10 +58,10 @@ def get_sample_stream(sample: Sample):
 
 
 def get_next_sample_id(db: Session, user: User) -> Optional[int]:
-    already_labelled = db.query(Label.sample).filter(
-        Label.creator == user.id, Label.deleted_at != None
+    already_labelled = db.query(Label.sample).filter(Label.creator == user.id)
+    not_labelled = db.query(Sample.id).filter(
+        Sample.id.not_in(already_labelled), Sample.state != SampleState.hidden
     )
-    not_labelled = db.query(Sample.id).filter(Sample.id.not_in(already_labelled))
-    db.query(Label.sample).filter(Label.sample.in_(not_labelled))
+    # db.query(Label.sample).filter(Label.sample.in_(not_labelled)).group_by()
     result = not_labelled.first()
     return result[0] if result else None

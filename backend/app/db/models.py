@@ -1,7 +1,19 @@
-from sqlalchemy import Column
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer, Float, Identity, Enum
-from sqlalchemy import String, LargeBinary, Boolean, DateTime, Numeric
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    Float,
+    Identity,
+    Enum,
+    String,
+    LargeBinary,
+    Boolean,
+    DateTime,
+    Numeric,
+    UniqueConstraint,
+    JSON,
+    CheckConstraint,
+)
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -24,6 +36,13 @@ class User(Base):
     labels = relationship("Label", cascade="all, delete-orphan")
 
 
+@enum.unique
+class SampleState(enum.Enum):
+    new = "n"
+    checked = "c"
+    hidden = "h"
+
+
 class Sample(Base):
     __tablename__ = "sample"
 
@@ -36,6 +55,8 @@ class Sample(Base):
     )
 
     duration = Column(Float, nullable=False)
+
+    state = Column(Enum(SampleState), nullable=False, default=SampleState.new)
 
     labels = relationship("Label", cascade="all, delete-orphan")
     audio_files = relationship("AudioFile", cascade="all, delete-orphan")
@@ -57,13 +78,6 @@ class AudioFile(Base):
 
 
 @enum.unique
-class LabelType(enum.Enum):
-    gt_gender = "gg"
-    status = "status"
-    gender = "g"
-
-
-@enum.unique
 class AudioStatus(enum.Enum):
     ok = "ok"
     no_audio = "no_audio"
@@ -77,17 +91,45 @@ class Label(Base):
 
     id = Column(Integer, Identity(start=10), primary_key=True)
 
-    # When NULL then created automatically for imported datasets
-    creator = Column(Integer, ForeignKey("vff_user.id", ondelete="CASCADE"))
+    creator = Column(
+        Integer, ForeignKey("vff_user.id", ondelete="CASCADE"), nullable=False
+    )
     sample = Column(
         Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
     )
 
+    status = Column(Enum(AudioStatus), nullable=False)
+
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    values = relationship("LabelValue", cascade="all, delete-orphan")
+
+    __table_args__ = (UniqueConstraint("creator", "sample", name="_creator_sample_uc"),)
+
+
+@enum.unique
+class LabelType(enum.Enum):
+    gt_gender = "G"
+    gender = "g"
+
+
+class LabelValue(Base):
+    __tablename__ = "labelvalue"
+
+    id = Column(Integer, Identity(start=10), primary_key=True)
+    sample = Column(Integer, ForeignKey("label.id", ondelete="CASCADE"), nullable=False)
+
     label_type = Column(Enum(LabelType), nullable=False)
-    label_value = Column(String, nullable=False)
+    label_value = Column(JSON(), nullable=False)
 
     begin_time = Column(Numeric(scale=3))
     end_time = Column(Numeric(scale=3))
 
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    deleted_at = Column(DateTime, default=None)
+    __table_args__ = (
+        (
+            CheckConstraint(
+                "(begin_time IS NULL) = (end_time IS NULL)",
+                name="time_null_cc",
+            )
+        ),
+    )
