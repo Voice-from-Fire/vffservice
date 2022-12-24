@@ -20,6 +20,7 @@ from sqlalchemy.orm import relationship
 import enum
 import datetime
 
+
 Base = declarative_base()
 
 
@@ -133,3 +134,39 @@ class LabelValue(Base):
             )
         ),
     )
+
+
+@enum.unique
+class EventType(enum.Enum):
+    user_new = "user-new"
+    user_deleted = "user-del"
+
+    sample_new = "sample-new"
+    label_new = "label-new"
+
+
+class AuditLog(Base):
+    __tablename__ = "auditlog"
+
+    id = Column(Integer, Identity(start=10), primary_key=True)
+
+    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    event = Column(Enum(EventType), nullable=False)
+
+    user = Column(
+        Integer,
+        ForeignKey("vff_user.id"),
+    )
+
+    sample = Column(
+        Integer,
+        ForeignKey("sample.id"),
+    )
+
+    label = Column(
+        Integer,
+        ForeignKey("label.id"),
+    )
+
+    message = Column(String)
