@@ -58,9 +58,9 @@ class AudioFile(Base):
 
 @enum.unique
 class LabelType(enum.Enum):
-    gt_gender = "gt_gender"
+    gt_gender = "gg"
     status = "status"
-    gender = "gender"
+    gender = "g"
 
 
 @enum.unique
@@ -77,9 +77,8 @@ class Label(Base):
 
     id = Column(Integer, Identity(start=10), primary_key=True)
 
-    creator = Column(
-        Integer, ForeignKey("vff_user.id", ondelete="CASCADE"), nullable=False
-    )
+    # When NULL then created automatically for imported datasets
+    creator = Column(Integer, ForeignKey("vff_user.id", ondelete="CASCADE"))
     sample = Column(
         Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
     )

@@ -58,9 +58,10 @@ def get_sample_stream(sample: Sample):
 
 
 def get_next_sample_id(db: Session, user: User) -> Optional[int]:
-    # TODO: This is simple version for protytpe
-    return (
-        db.query(Sample)
-        .filter(Sample.labels.filter(Label.creator != user).any())
-        .first()
+    already_labelled = db.query(Label.sample).filter(
+        Label.creator == user.id, Label.deleted_at != None
     )
+    not_labelled = db.query(Sample.id).filter(Sample.id.not_in(already_labelled))
+    db.query(Label.sample).filter(Label.sample.in_(not_labelled))
+    result = not_labelled.first()
+    return result[0] if result else None
