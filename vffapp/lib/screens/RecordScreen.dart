@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:vffapp/components/MainBar.dart';
+
+import '../components/ScreenWrapper.dart';
 
 class RecordScreen extends StatelessWidget {
   const RecordScreen({super.key});
@@ -8,8 +9,7 @@ class RecordScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: makeBar(context),
-        body: Text("Records", style: Theme.of(context).textTheme.headline3));
+    return ScreenWrapper("Audio records",
+        child: Text("Records", style: Theme.of(context).textTheme.headline3));
   }
 }
