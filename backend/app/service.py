@@ -38,8 +38,7 @@ def get_db():
 
 
 origins = [
-    "http://localhost",
-    "http://localhost:3000",
+    "*",
 ]
 
 app = FastAPI(debug=True)
