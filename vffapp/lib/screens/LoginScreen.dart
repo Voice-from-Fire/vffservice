@@ -1,10 +1,11 @@
-import 'dart:html';
-
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vffapp/common/api.dart';
 import 'package:vffapp/common/appstate.dart';
 import 'package:vffapp/common/errors.dart';
 import 'package:vffapp/screens/RecordScreen.dart';
+import 'package:vff_api/vff_api.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,10 +32,22 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void doLogin(BuildContext context) {
-    AppState appState = context.read<AppState>();
-    setLoginInProcess(true);
-    showErrorMessage(context, "XXXX");
+  Future<void> doLogin(BuildContext context) async {
+    //AppState appState = context.read<AppState>();
+    //setLoginInProcess(true);
+
+    var api = makeApi().getUsersApi();
+
+    try {
+      var response =
+          await api.loginAuthTokenPost(username: "testuser", password: "pass");
+      print(response);
+    } on DioError catch (e) {
+      showErrorMessage(context, 'Login failed: ${e.message}\n');
+    }
+    ;
+
+    //showErrorMessage(context, "XXXX");
     /*appState.login("xxx", "token");
     Navigator.of(context).pushNamed("/");*/
   }
