@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vffapp/screens/NewRecordScreen.dart';
+import 'package:vffapp/screens/RecordScreen.dart';
 
 import '../common/appstate.dart';
 
@@ -34,7 +35,7 @@ class ScreenWrapper extends StatelessWidget {
           title: const Text('My records'),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).pushNamed(NewRecordScreen.route);
+            Navigator.of(context).pushNamed(RecordScreen.route);
           },
         ),
         ListTile(

@@ -33,19 +33,23 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> doLogin(BuildContext context) async {
-    //AppState appState = context.read<AppState>();
-    //setLoginInProcess(true);
-
+    setLoginInProcess(true);
     var api = makeApi().getUsersApi();
 
     try {
-      var response =
-          await api.loginAuthTokenPost(username: "testuser", password: "pass");
-      print(response);
+      var response = await api.loginAuthTokenPost(
+          username: nameController.text, password: passwordController.text);
+      AppState appState = context.read<AppState>();
+      appState.login(nameController.text, response.data!.asMap["access_token"]);
+      Navigator.of(context).pushNamed("/");
     } on DioError catch (e) {
-      showErrorMessage(context, 'Login failed: ${e.message}\n');
+      setLoginInProcess(false);
+      if (e.response?.statusCode == 401) {
+        showErrorMessage(context, "Invalid name or password");
+      } else {
+        showErrorMessage(context, "Connection to server failed");
+      }
     }
-    ;
 
     //showErrorMessage(context, "XXXX");
     /*appState.login("xxx", "token");
