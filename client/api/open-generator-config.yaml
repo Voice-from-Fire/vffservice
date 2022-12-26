@@ -1,0 +1,4 @@
+# Config options for the dart-dio generator
+pubName: vff_api
+pubVersion: 0.0.1
+pubDescription: "VFF API Client"
