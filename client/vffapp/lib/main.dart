@@ -38,7 +38,8 @@ class VffApp extends StatelessWidget {
             }
             return MaterialPageRoute(builder: (_) => screen);
           } else {
-            return MaterialPageRoute(builder: (_) => const LoginScreen());
+            //return MaterialPageRoute(builder: (_) => const LoginScreen());
+            return MaterialPageRoute(builder: (_) => const NewRecordScreen());
           }
         });
     /*routes: {

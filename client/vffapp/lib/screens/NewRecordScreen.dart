@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../components/AudioRecorder.dart';
 import '../components/ScreenWrapper.dart';
 
 class NewRecordScreen extends StatelessWidget {
@@ -10,7 +11,6 @@ class NewRecordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenWrapper("New record",
-        child:
-            Text("New record", style: Theme.of(context).textTheme.headline3));
+        child: AudioRecorder(onStop: (path) => {print(path)}));
   }
 }
