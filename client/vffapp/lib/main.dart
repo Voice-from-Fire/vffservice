@@ -28,7 +28,7 @@ class VffApp extends StatelessWidget {
         onGenerateRoute: (settings) {
           AppState appState = context.read<AppState>();
           if (appState.isLogged()) {
-            StatelessWidget screen;
+            Widget screen;
             if (RecordScreen.route == settings.name) {
               screen = const RecordScreen();
             } else if (NewRecordScreen.route == settings.name) {

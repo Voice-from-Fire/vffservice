@@ -84,30 +84,21 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _buildRecordStopControl(),
-                const SizedBox(width: 20),
-                _buildPauseResumeControl(),
-                const SizedBox(width: 20),
-                _buildText(),
-              ],
-            ),
-            if (_amplitude != null) ...[
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        _buildRecordStopControl(),
+        const SizedBox(width: 20),
+        _buildPauseResumeControl(),
+        const SizedBox(width: 20),
+        _buildText(),
+      ],
+    );
+    /*if (_amplitude != null) ...[
               const SizedBox(height: 40),
               Text('Current: ${_amplitude?.current ?? 0.0}'),
               Text('Max: ${_amplitude?.max ?? 0.0}'),
-            ],
-          ],
-        ),
-      ),
-    );
+            ],*/
   }
 
   @override
@@ -180,7 +171,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
       return _buildTimer();
     }
 
-    return const Text("Waiting to record");
+    return const Text("Ready to record");
   }
 
   Widget _buildTimer() {
