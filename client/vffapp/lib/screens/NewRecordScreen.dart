@@ -29,10 +29,12 @@ class NewRecordScreen extends StatefulWidget {
 
 class _NewRecordScreenState extends State<NewRecordScreen> {
   String? _url;
+  Duration? _duration;
 
-  void onStop(String url) {
+  void onStop(String url, Duration duration) {
     setState(() {
       _url = url;
+      _duration = duration;
     });
   }
 

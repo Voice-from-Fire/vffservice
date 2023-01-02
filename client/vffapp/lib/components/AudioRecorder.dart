@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
+import 'package:vffapp/components/AudioButton.dart';
 
 class AudioRecorder extends StatefulWidget {
-  final void Function(String path) onStop;
+  final void Function(String path, Duration duration) onStop;
 
   const AudioRecorder({Key? key, required this.onStop}) : super(key: key);
 
@@ -21,6 +22,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
   RecordState _recordState = RecordState.stop;
   StreamSubscription<Amplitude>? _amplitudeSub;
   Amplitude? _amplitude;
+  bool _initing = false;
+  final Stopwatch _stopwatch = Stopwatch();
 
   @override
   void initState() {
@@ -37,6 +40,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   Future<void> _start() async {
     try {
+      setState(() => _initing = true);
       if (await _audioRecorder.hasPermission()) {
         // We don't do anything with this but printing
         final isSupported = await _audioRecorder.isEncoderSupported(
@@ -51,10 +55,11 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
         await _audioRecorder.start();
         _recordDuration = 0;
-
+        setState(() => _initing = false);
         _startTimer();
       }
     } catch (e) {
+      print(e);
       if (kDebugMode) {
         print(e);
       }
@@ -66,9 +71,10 @@ class _AudioRecorderState extends State<AudioRecorder> {
     _recordDuration = 0;
 
     final path = await _audioRecorder.stop();
+    _stopwatch.stop();
 
     if (path != null) {
-      widget.onStop(path);
+      widget.onStop(path, _stopwatch.elapsed);
     }
   }
 
@@ -84,14 +90,17 @@ class _AudioRecorderState extends State<AudioRecorder> {
 
   @override
   Widget build(BuildContext context) {
+    var button = _recordState == RecordState.stop
+        ? AudioButton(icon: Icons.mic, onTap: _start)
+        : AudioButton(icon: Icons.pause, onTap: _stop);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        _buildRecordStopControl(),
-        const SizedBox(width: 20),
-        _buildPauseResumeControl(),
-        const SizedBox(width: 20),
-        _buildText(),
+        Column(children: [
+          button,
+          const SizedBox(height: 20),
+          _buildText(),
+        ])
       ],
     );
     /*if (_amplitude != null) ...[
@@ -110,7 +119,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
     super.dispose();
   }
 
-  Widget _buildRecordStopControl() {
+  /*Widget _buildRecordStopControl() {
     late Icon icon;
     late Color color;
 
@@ -164,9 +173,12 @@ class _AudioRecorderState extends State<AudioRecorder> {
         ),
       ),
     );
-  }
+  }*/
 
   Widget _buildText() {
+    if (_initing) {
+      return const Text("Initing ...");
+    }
     if (_recordState != RecordState.stop) {
       return _buildTimer();
     }
@@ -194,8 +206,8 @@ class _AudioRecorderState extends State<AudioRecorder> {
   }
 
   void _startTimer() {
+    _stopwatch.start();
     _timer?.cancel();
-
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       setState(() => _recordDuration++);
     });
