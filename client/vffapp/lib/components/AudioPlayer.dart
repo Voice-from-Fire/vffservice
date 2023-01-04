@@ -7,7 +7,7 @@ import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 
 class AudioPlayer extends StatefulWidget {
   final String url;
-  final Duration? duration;
+  final Duration duration;
 
   AudioPlayer({super.key, required this.url, required this.duration});
 
@@ -18,11 +18,17 @@ class AudioPlayer extends StatefulWidget {
 class _AudioPlayerState extends State<AudioPlayer> {
   final _player = ap.AudioPlayer();
   bool _isRunning = false;
-  Duration? duration;
+  Duration _position = Duration.zero;
 
   @override
   void initState() {
     super.initState();
+
+    _player.onPositionChanged.listen((position) {
+      setState(() {
+        _position = position;
+      });
+    });
 
     _player.onPlayerComplete.listen((event) async {
       setState(() {
@@ -36,7 +42,6 @@ class _AudioPlayerState extends State<AudioPlayer> {
                 duration = value;
               }))*/
         });
-    _player.onDurationChanged.listen((value) => {print("DURATION ${value}")});
 
     // _player.setUrl(widget.url);
     // _player.durationFuture?.then((value) => print("D ${value}"));
@@ -64,11 +69,15 @@ class _AudioPlayerState extends State<AudioPlayer> {
     await _player.pause();
   }
 
+  Future<void> onSeek(Duration position) async {
+    await _player.seek(position);
+  }
+
   @override
   Widget build(BuildContext context) {
     var icon = _isRunning ? Icons.pause : Icons.play_arrow;
     var onTap = _isRunning ? pause : play;
-    var duration = this.duration ?? Duration.zero;
+    var duration = widget.duration;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -77,7 +86,8 @@ class _AudioPlayerState extends State<AudioPlayer> {
         SizedBox(
             width: 200,
             height: 20,
-            child: ProgressBar(progress: Duration.zero, total: duration))
+            child: ProgressBar(
+                progress: _position, total: duration, onSeek: onSeek))
       ],
     );
   }

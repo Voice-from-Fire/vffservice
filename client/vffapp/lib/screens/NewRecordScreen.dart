@@ -40,8 +40,13 @@ class _NewRecordScreenState extends State<NewRecordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var children = _url != null
-        ? [AudioPlayer(url: _url!)]
+    var children = _url != null && _duration != null
+        ? [
+            AudioPlayer(
+              url: _url!,
+              duration: _duration!,
+            )
+          ]
         : [AudioRecorder(onStop: onStop)];
     return ScreenWrapper("New record",
         child: Column(
