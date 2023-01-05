@@ -1,4 +1,5 @@
 from app.service import app
+from sqlalchemy.orm import Session
 from app.ops.user import remove_user, get_user_by_name
 from fastapi.testclient import TestClient
 import random
@@ -7,7 +8,7 @@ import string
 client = TestClient(app)
 
 
-def test_invalid_login():
+def test_invalid_login(db_session):
     r = client.post(
         "/auth/token", json={"username": "non-existent", "password": "pass"}
     )

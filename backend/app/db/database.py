@@ -4,20 +4,22 @@ from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.exc import ProgrammingError
 import logging
 
-DATABASE_NAME = "voicedb"
+from .. import config
 
 
-def connect():
-    return create_engine(f"postgresql+psycopg2://postgres:postgres@db/{DATABASE_NAME}")
+def connect_db():
+    return create_engine(f"{config.DATABASE_URL}/{config.DATABASE_NAME}")
 
 
 def init_db():
-    engine = create_engine("postgresql+psycopg2://postgres:postgres@db")
+    engine = create_engine(config.DATABASE_URL)
     conn = engine.connect()
     conn.execute("commit")
     try:
-        conn.execute(f"create database {DATABASE_NAME}")
-    except ProgrammingError:
+        conn.execute(f"create database {config.DATABASE_NAME}")
+    except ProgrammingError as e:
         logging.warning("Database already exists.")
-    engine = connect()
+        raise e
+    engine = connect_db()
     Base.metadata.create_all(engine)
+    return engine, conn

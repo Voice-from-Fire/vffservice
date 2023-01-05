@@ -7,7 +7,7 @@ from .schemas.user import UserCreate
 from .ops.user import create_user
 
 from .tools import ffmpeg
-from .db.database import init_db, connect
+from .db.database import init_db, connect_db
 from .db.models import AudioFile, Sample, Base
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError

@@ -4,6 +4,7 @@ import pytest
 import random
 import string
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import sessionmaker, Session, close_all_sessions
 
 
 TEST_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
@@ -12,36 +13,63 @@ ROOT_DIRECTORY = os.path.dirname(TEST_DIRECTORY)
 
 sys.path.insert(0, ROOT_DIRECTORY)
 
+from app import config
+
+config.TEST_MODE = True
 
 from app import schemas
-from app.service import get_db, login
+from app import service
 from app.ops.user import create_user, remove_user
 from app.ops.samples import configure_filestore, create_sample
+from app.db import database, session as session_module
 
 
+TESTUSER_USERNAME = "testuser"
 TESTUSER_PASSWORD = "testuserxx"
 
 
-@pytest.fixture(scope="session")
+def random_id(prefix):
+    return prefix + "".join(random.choice(string.ascii_lowercase) for _ in range(7))
+
+
+@pytest.fixture()
 def db_session():
-    yield from get_db()
+    dbname = random_id("testdb")
+    original = session_module._get_db
+
+    config.DATABASE_NAME = dbname
+    engine, conn = database.init_db()
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+    def my_get_db():
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    session_module._get_db = my_get_db
+
+    session = SessionLocal()
+    yield session
+    close_all_sessions()
+    conn.execute("commit")
+    conn.execute(f"DROP DATABASE {dbname} WITH (FORCE)")
+    session_module._get_db = original
 
 
 @pytest.fixture()
 def user(db_session):
-    username = "testuserxx" + "".join(
-        random.choice(string.ascii_letters) for i in range(5)
-    )
     user = create_user(
-        db_session, schemas.UserCreate(name=username, password=TESTUSER_PASSWORD)
+        db_session,
+        schemas.UserCreate(name=TESTUSER_USERNAME, password=TESTUSER_PASSWORD),
     )
     yield user
-    remove_user(db_session, user.id)
 
 
 @pytest.fixture()
 def auth(user, db_session):
-    response = login(
+    response = service.login(
         data=OAuth2PasswordRequestForm(
             username=user.name, password=TESTUSER_PASSWORD, scope=""
         ),

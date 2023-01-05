@@ -7,6 +7,7 @@ import app.ops.samples as ops_samples
 from . import schemas
 from .db.models import Base
 from .db import database
+from .db.session import get_db
 from .db.models import User
 from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -21,21 +22,7 @@ from fastapi.responses import StreamingResponse
 # TODO
 APP_SECRET = "todo-load-secret-from-somewhere"
 
-engine = database.connect()
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
-
 manager = LoginManager(APP_SECRET, token_url="/auth/token")
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 origins = [
     "http://localhost",
