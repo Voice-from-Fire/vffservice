@@ -144,6 +144,8 @@ class EventType(enum.Enum):
     sample_new = "sample-new"
     label_new = "label-new"
 
+    error = "error"
+
 
 class AuditLog(Base):
     __tablename__ = "auditlog"
@@ -154,19 +156,11 @@ class AuditLog(Base):
 
     event = Column(Enum(EventType), nullable=False)
 
-    user = Column(
-        Integer,
-        ForeignKey("vff_user.id"),
-    )
+    user = Column(Integer)
 
-    sample = Column(
-        Integer,
-        ForeignKey("sample.id"),
-    )
+    sample = Column(Integer)
 
-    label = Column(
-        Integer,
-        ForeignKey("label.id"),
-    )
+    label = Column(Integer)
 
+    payload = Column(JSON())
     message = Column(String)

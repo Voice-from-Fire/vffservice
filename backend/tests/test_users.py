@@ -1,6 +1,7 @@
 from app.service import app
 from sqlalchemy.orm import Session
 from app.ops.user import remove_user, get_user_by_name
+from app.db.models import AuditLog, EventType
 from fastapi.testclient import TestClient
 import random
 import string
@@ -31,10 +32,22 @@ def test_create_user(db_session):
         assert isinstance(user_id, int)
         assert r.json()["name"] == username
         assert get_user_by_name(db_session, username).id == user_id
+        assert (
+            db_session.query(AuditLog)
+            .filter(AuditLog.user == user_id, AuditLog.event == EventType.user_new)
+            .count()
+            == 1
+        )
     finally:
         if user_id is not None:
             remove_user(db_session, user_id)
     assert get_user_by_name(db_session, username) is None
+    assert (
+        db_session.query(AuditLog)
+        .filter(AuditLog.user == user_id, AuditLog.event == EventType.user_deleted)
+        .count()
+        == 1
+    )
 
 
 def test_authaccess(auth):
