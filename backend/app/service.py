@@ -3,12 +3,12 @@ from sqlalchemy.orm import sessionmaker, Session
 
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
+from app.ops.audit_log import add_audit_log
 
 from . import schemas
-from .db.models import Base
+from .db.models import AuditLog, Base, EventType, User
 from .db import database
 from .db.session import get_db
-from .db.models import User
 from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi_login import LoginManager

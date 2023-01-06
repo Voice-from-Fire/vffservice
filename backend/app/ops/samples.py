@@ -1,6 +1,7 @@
 from typing import List, Optional
 
-from ..db.models import SampleState, User, AudioFile, Sample, Label
+from ..db.models import SampleState, User, AudioFile, Sample, Label, EventType
+from app.ops.audit_log import add_audit_log
 from sqlalchemy.orm import Session
 from shutil import copyfileobj
 import uuid
@@ -34,9 +35,11 @@ def create_sample(db: Session, file, user: User) -> int:
         sample.audio_files.append(audio_file)
         db.add(sample)
         db.commit()
+        add_audit_log(db, event=EventType.sample_new, sample=sample.id, commit=True)
     except Exception as e:
         logger.info(f"Upload fails, removing file {fullpath}")
         os.unlink(fullpath)
+        add_audit_log(db, event=EventType.error, message=e, commit=True)
         raise e
     # db.refresh(audio_file)
     return audio_file.id
