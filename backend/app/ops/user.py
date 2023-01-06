@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from app.ops.audit_log import add_audit_log
 from ..db import models
 from .. import schemas
 import bcrypt
@@ -13,6 +14,7 @@ def remove_user(db: Session, user_id: int):
     # TODO: Delete files from storage
     db.query(models.Sample).filter_by(owner=user_id).delete()
     db.query(models.User).filter_by(id=user_id).delete()
+    auditLog = add_audit_log(db, event=models.EventType.user_deleted, user=user_id, commit=False)
     db.commit()
 
 
@@ -23,6 +25,7 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db.add(user)
     db.commit()
     db.refresh(user)
+    add_audit_log(db, event=models.EventType.user_new, user=user.id, commit=True)
     return user
 
 
