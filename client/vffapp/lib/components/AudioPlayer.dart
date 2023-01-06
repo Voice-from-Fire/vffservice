@@ -9,7 +9,7 @@ class AudioPlayer extends StatefulWidget {
   final String url;
   final Duration duration;
 
-  AudioPlayer({super.key, required this.url, required this.duration});
+  const AudioPlayer({super.key, required this.url, required this.duration});
 
   @override
   State<AudioPlayer> createState() => _AudioPlayerState();
@@ -58,7 +58,6 @@ class _AudioPlayerState extends State<AudioPlayer> {
     setState(() {
       _isRunning = true;
     });
-    //await _player.play();
     await _player.resume();
   }
 
@@ -70,6 +69,13 @@ class _AudioPlayerState extends State<AudioPlayer> {
   }
 
   Future<void> onSeek(Duration position) async {
+    if (!_isRunning) {
+      // There is a strange behavior when
+      // stream is completed then seek does not work
+      // anymore (at least for web version)
+      // It seems that in "pause" mode, it works
+      await _player.pause();
+    }
     await _player.seek(position);
   }
 
@@ -81,7 +87,7 @@ class _AudioPlayerState extends State<AudioPlayer> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        AudioButton(icon: icon, onTap: play),
+        AudioButton(icon: icon, onTap: onTap),
         const SizedBox(width: 30),
         SizedBox(
             width: 200,
