@@ -5,7 +5,6 @@ class AppState with ChangeNotifier {
   String? _userName = null;
 
   bool isLogged() => _accessToken != null;
-  String? userName() => _userName;
 
   void login(String userName, String token) {
     _userName = userName;
@@ -18,4 +17,7 @@ class AppState with ChangeNotifier {
     _accessToken = null;
     notifyListeners();
   }
+
+  String? get accessToken => _accessToken;
+  String? get userName => _userName;
 }

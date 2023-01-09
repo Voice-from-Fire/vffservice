@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> doLogin(BuildContext context) async {
     setLoginInProcess(true);
-    var api = makeApi().getUsersApi();
+    var api = makeApi(null).getUsersApi();
 
     try {
       var response = await api.loginAuthTokenPost(
@@ -77,11 +77,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   enableSuggestions: false,
                   autocorrect: false),
               Padding(
-                  padding: EdgeInsets.only(top: 15),
+                  padding: const EdgeInsets.only(top: 15),
                   child: ElevatedButton(
                       onPressed:
                           _loginInProgress ? null : () => doLogin(context),
-                      child: Text("Login")))
+                      child: const Text("Login")))
             ]))
       ],
     ));

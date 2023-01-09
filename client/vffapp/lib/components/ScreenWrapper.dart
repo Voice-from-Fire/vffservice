@@ -15,7 +15,7 @@ class ScreenWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     AppState appState = context.watch<AppState>();
-    String userName = appState.userName() ?? "<unknown>";
+    String userName = appState.userName ?? "<unknown>";
     var drawer_content = ListView(
       // Important: Remove any padding from the ListView.
       padding: EdgeInsets.zero,
