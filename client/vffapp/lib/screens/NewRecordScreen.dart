@@ -58,7 +58,7 @@ class _NewRecordScreenState extends State<NewRecordScreen> {
               ElevatedButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.upload),
-                  label: const Text("Upload"),
+                  label: const Text("Upload\nrecording"),
                   style: ButtonStyle(
                       padding: MaterialStateProperty.all(EdgeInsets.all(30)))),
               const SizedBox(width: 60),
@@ -68,10 +68,11 @@ class _NewRecordScreenState extends State<NewRecordScreen> {
                   style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(Colors.grey),
                       padding: MaterialStateProperty.all(EdgeInsets.all(30))),
-                  label: const Text("Discard"))
+                  label: const Text("Discard\nrecording"))
             ])
           ]
         : [AudioRecorder(onStop: onStop)];
+
     return ScreenWrapper("New record",
         child: Column(
             mainAxisAlignment: MainAxisAlignment.center, children: children));

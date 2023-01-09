@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart' as ap;
 //import 'package:just_audio/just_audio.dart' as ja;
 
@@ -20,17 +22,20 @@ class _AudioPlayerState extends State<AudioPlayer> {
   bool _isRunning = false;
   Duration _position = Duration.zero;
 
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<void>? _completeSub;
+
   @override
   void initState() {
     super.initState();
 
-    _player.onPositionChanged.listen((position) {
+    _positionSub = _player.onPositionChanged.listen((position) {
       setState(() {
         _position = position;
       });
     });
 
-    _player.onPlayerComplete.listen((event) async {
+    _completeSub = _player.onPlayerComplete.listen((event) async {
       setState(() {
         _isRunning = false;
       });
@@ -50,8 +55,10 @@ class _AudioPlayerState extends State<AudioPlayer> {
 
   @override
   void dispose() {
-    super.dispose();
+    _positionSub?.cancel();
+    _completeSub?.cancel();
     _player.dispose();
+    super.dispose();
   }
 
   Future<void> play() async {
