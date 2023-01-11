@@ -156,17 +156,11 @@ class AuditLog(Base):
 
     event = Column(Enum(EventType), nullable=False)
 
-    user = Column(
-        Integer
-    )
+    user = Column(Integer)
 
-    sample = Column(
-        Integer
-    )
+    sample = Column(Integer)
 
-    label = Column(
-        Integer
-    )
+    label = Column(Integer)
 
     payload = Column(JSON())
     message = Column(String)

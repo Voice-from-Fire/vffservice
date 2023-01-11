@@ -14,7 +14,9 @@ def remove_user(db: Session, user_id: int):
     # TODO: Delete files from storage
     db.query(models.Sample).filter_by(owner=user_id).delete()
     db.query(models.User).filter_by(id=user_id).delete()
-    auditLog = add_audit_log(db, event=models.EventType.user_deleted, user=user_id, commit=False)
+    auditLog = add_audit_log(
+        db, event=models.EventType.user_deleted, user=user_id, commit=False
+    )
     db.commit()
 
 

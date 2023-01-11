@@ -7,6 +7,7 @@ import pytest
 
 from app.ops.audit_log import add_audit_log
 
+
 def test_add_audit_log(db_session):
     add_audit_log(db=db_session, commit=True, event=EventType.user_new, user=15)
     assert db_session.query(AuditLog).filter(AuditLog.user == 15).count() == 1

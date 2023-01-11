@@ -15,7 +15,14 @@ def test_upload_file(test_wav, auth, user, db_session):
         assert r.status_code == 200
         sample_id = r.json()
         assert isinstance(sample_id, int)
-        assert db_session.query(AuditLog).filter(AuditLog.sample == sample_id).filter(AuditLog.event == EventType.sample_new).count() == 1
+        assert (
+            db_session.query(AuditLog)
+            .filter(
+                AuditLog.sample == sample_id, AuditLog.event == EventType.sample_new
+            )
+            .count()
+            == 1
+        )
 
     r = client.get("/samples", headers=auth)
     assert r.status_code == 200
