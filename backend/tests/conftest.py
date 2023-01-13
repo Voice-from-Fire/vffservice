@@ -1,5 +1,6 @@
 import imp
 import os
+import shutil
 import sys
 import pytest
 import random
@@ -92,9 +93,23 @@ def auth(user, db_session):
     return {"Authorization": f"Bearer {token}"}
 
 
+def make_local_asset(tmpdir, filename):
+    source = os.path.join(ASSETS_DIRECTORY, filename)
+    target_dir = tmpdir / "assets"
+    os.makedirs(target_dir, exist_ok=True)
+    target = str(target_dir / filename)
+    shutil.copyfile(source, target)
+    return target
+
+
 @pytest.fixture()
-def test_wav():
-    return os.path.join(ASSETS_DIRECTORY, "test.wav")
+def test_wav(tmpdir):
+    return make_local_asset(tmpdir, "test.wav")
+
+
+@pytest.fixture()
+def test_webm(tmpdir):
+    return make_local_asset(tmpdir, "test.webm")
 
 
 @pytest.fixture(autouse=True)
