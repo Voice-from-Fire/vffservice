@@ -10,7 +10,7 @@ import logging
 from ..tools import ffmpeg
 
 
-FILESTORE_PATH = "/data"
+FILESTORE_PATH = "/workspace/backend/data"
 
 logger = logging.Logger(__name__)
 
@@ -21,28 +21,31 @@ def configure_filestore(path: str):
 
 
 def create_sample(db: Session, file, user: User) -> int:
-    filename = str(uuid.uuid4()) + ".wav"
+    filename = str(uuid.uuid4())
     fullpath = os.path.join(FILESTORE_PATH, filename)
+    tmp_fullpath = fullpath + ".tmp"
     file.seek(0)
     logger.info(f"Uploading file {filename} by {user.name}")
-    try:
-        with open(fullpath, "wb") as f:
+    with open(tmp_fullpath, "wb") as f:
+        try:
             copyfileobj(file, f)
-        size = os.path.getsize(fullpath)
-        duration = ffmpeg.get_duration(fullpath)
-        sample = Sample(duration=duration, owner=user.id)
-        audio_file = AudioFile(path=filename, original=True, size=size)
-        sample.audio_files.append(audio_file)
-        db.add(sample)
-        db.commit()
-        add_audit_log(db, event=EventType.sample_new, sample=sample.id, commit=True)
-    except Exception as e:
-        logger.info(f"Upload fails, removing file {fullpath}")
-        os.unlink(fullpath)
-        add_audit_log(db, event=EventType.error, message=e, commit=True)
-        raise e
-    # db.refresh(audio_file)
-    return audio_file.id
+            os.rename(tmp_fullpath, fullpath)
+            size = os.path.getsize(fullpath)
+            duration = ffmpeg.check_and_fix_audio(fullpath)
+            sample = Sample(duration=duration, owner=user.id)
+            audio_file = AudioFile(path=filename, original=True, size=size)
+            sample.audio_files.append(audio_file)
+            db.add(sample)
+            db.commit()
+            add_audit_log(db, event=EventType.sample_new, sample=sample.id, commit=True)
+            return sample.id
+        except Exception as e:
+            logger.info(f"Upload fails, removing file {fullpath}")
+            add_audit_log(db, event=EventType.error, message=e, commit=True)
+            if os.path.isfile(tmp_fullpath):
+                os.unlink(tmp_fullpath)
+            os.unlink(fullpath)
+            raise e
 
 
 def get_samples(db: Session, user: User) -> List[Sample]:
