@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List, Optional
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -22,7 +23,13 @@ from fastapi.responses import StreamingResponse
 # TODO
 APP_SECRET = "todo-load-secret-from-somewhere"
 
-manager = LoginManager(APP_SECRET, token_url="/auth/token")
+# In client, I have problem with DioError, at least in WEB backend, I cannot read HTTP error code,
+# and therefore detect if session is timeouted, I connect silently ask for new token,
+# temporary solution is to make expiration very long.
+manager = LoginManager(
+    APP_SECRET, token_url="/auth/token", default_expiry=timedelta(hours=12)
+)
+
 
 origins = [
     "*",
@@ -75,7 +82,6 @@ async def upload_sample(
     db: Session = Depends(get_db),
 ):
     # TODO check size of file
-    # TODO check that file is really audio
     # TODO compute hash and check for duplicties
     return ops_samples.create_sample(db, file.file, user)
 
