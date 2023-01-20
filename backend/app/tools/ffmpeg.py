@@ -1,6 +1,5 @@
 import subprocess
 import re
-import audioread
 import json
 import os
 import math
