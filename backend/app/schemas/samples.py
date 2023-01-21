@@ -1,11 +1,13 @@
 from typing import List
 from enum import Enum
+import datetime
 from pydantic import BaseModel
 
 
 class Sample(BaseModel):
     id: int
     duration: float
+    created_at: datetime.datetime
     owner: int
 
     class Config:

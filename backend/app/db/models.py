@@ -77,6 +77,8 @@ class Sample(Base):
     labels = relationship("Label", cascade="all, delete-orphan")
     audio_files = relationship("AudioFile", cascade="all, delete-orphan")
 
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
 
 class AudioFile(Base):
     __tablename__ = "audio_file"
@@ -89,7 +91,6 @@ class AudioFile(Base):
 
     path = Column(String, nullable=False)
     original = Column(Boolean, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     size = Column(Integer, nullable=False)
 
 
