@@ -16,6 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy_utils import EmailType
 
 import enum
 import datetime
@@ -32,6 +33,7 @@ class User(Base):
     name = Column(String, nullable=False, unique=True)
     hashed_password = Column(LargeBinary, nullable=False)
     active = Column(Boolean, nullable=False)
+    email = Column(EmailType)
 
     extra = Column(JSON)
 

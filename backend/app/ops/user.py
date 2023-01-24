@@ -31,6 +31,7 @@ def create_user(
     hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), salt)
     user = models.User(
         name=user.name,
+        email=user.email,
         hashed_password=hashed_password,
         extra=extra,
         active=True,

@@ -2,7 +2,7 @@ click
 sqlalchemy
 psycopg2
 sqlalchemy-utils
-fastapi
+fastapi[email]
 fastapi-login
 bcrypt
 python-multipart
