@@ -1,6 +1,7 @@
 from datetime import timedelta
 from typing import List, Optional
 from sqlalchemy.orm import sessionmaker, Session
+import os
 
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
@@ -51,7 +52,16 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = ops_user.get_user_by_name(db, user.name)
     if db_user:
         raise HTTPException(status_code=400, detail="Name is already used")
-    new_user = ops_user.create_user(db, user)
+
+    invitation_codes = os.environ.get("VFF_INVITATION_CODES", "").split()
+
+    if invitation_codes:
+        if user.invitation_code not in invitation_codes:
+            raise HTTPException(status_code=400, detail="Name is already used")
+        extra = {"invitation": user.invitation_code}
+    else:
+        extra = None
+    new_user = ops_user.create_user(db, user, extra=extra)
     return new_user
 
 

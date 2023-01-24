@@ -5,6 +5,7 @@ from app.db.models import AuditLog, EventType
 from fastapi.testclient import TestClient
 import random
 import string
+import os
 
 client = TestClient(app)
 
@@ -14,6 +15,26 @@ def test_invalid_login(db_session):
         "/auth/token", json={"username": "non-existent", "password": "pass"}
     )
     assert r.status_code == 422
+
+
+def test_invitation_code(db_session):
+    os.environ["VFF_INVITATION_CODES"] = "codeA codeB"
+    try:
+        r = client.post(
+            "/users",
+            json={"name": "user1", "password": "abc", "invitation_code": "codeB"},
+        )
+        assert r.status_code == 200
+        assert get_user_by_name(db_session, "user1").extra["invitation"] == "codeB"
+
+        r = client.post(
+            "/users",
+            json={"name": "user2", "password": "abc", "invitation_code": "codeC"},
+        )
+        assert r.status_code == 400
+        assert get_user_by_name(db_session, "user2") is None
+    finally:
+        del os.environ["VFF_INVITATION_CODES"]
 
 
 def test_create_user(db_session):

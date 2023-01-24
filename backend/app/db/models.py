@@ -33,6 +33,8 @@ class User(Base):
     hashed_password = Column(LargeBinary, nullable=False)
     active = Column(Boolean, nullable=False)
 
+    extra = Column(JSON)
+
     samples = relationship("Sample", cascade="all, delete-orphan")
     labels = relationship("Label", cascade="all, delete-orphan")
 

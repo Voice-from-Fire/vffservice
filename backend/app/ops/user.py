@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.ops.audit_log import add_audit_log
@@ -20,10 +21,20 @@ def remove_user(db: Session, user_id: int):
     db.commit()
 
 
-def create_user(db: Session, user: schemas.UserCreate) -> models.User:
+def create_user(
+    db: Session,
+    user: schemas.UserCreate,
+    *,
+    extra: Optional[dict] = None,
+) -> models.User:
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), salt)
-    user = models.User(name=user.name, hashed_password=hashed_password, active=True)
+    user = models.User(
+        name=user.name,
+        hashed_password=hashed_password,
+        extra=extra,
+        active=True,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
