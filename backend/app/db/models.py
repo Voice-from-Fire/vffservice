@@ -42,6 +42,8 @@ class User(Base):
     active = Column(Boolean, nullable=False)
     role = Column(Enum(Role), nullable=False)
 
+    extra = Column(JSON)
+
     samples = relationship("Sample", cascade="all, delete-orphan")
     labels = relationship("Label", cascade="all, delete-orphan")
 

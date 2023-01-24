@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -30,12 +31,20 @@ def remove_user(db: Session, user_id: int):
 
 
 def create_user(
-    db: Session, user: schemas.UserCreate, *, role: models.Role = models.Role.uploader
+    db: Session,
+    user: schemas.UserCreate,
+    *,
+    role: models.Role = models.Role.uploader    
+    extra: Optional[dict] = None,
 ) -> models.User:
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), salt)
     user = models.User(
-        name=user.name, hashed_password=hashed_password, role=role, active=True
+        name=user.name,
+        hashed_password=hashed_password,
+        role=role,
+        extra=extra,
+        active=True,
     )
     db.add(user)
     db.commit()
