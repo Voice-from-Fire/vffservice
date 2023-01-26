@@ -48,17 +48,22 @@ app.add_middleware(
 )
 
 
+@app.get("/users", response_model=List[schemas.User], tags=["users"])
+def get_all_users(db: Session = Depends(get_db)):
+    return ops_user.get_all_users(db)
+
+
 @app.post("/users", response_model=schemas.User, tags=["users"])
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = ops_user.get_user_by_name(db, user.name)
     if db_user:
-        raise HTTPException(status_code=400, detail="Name is already used")
+        raise HTTPException(status_code=409, detail="Name is already used")
 
     invitation_codes = os.environ.get("VFF_INVITATION_CODES", "").split()
 
     if invitation_codes:
         if user.invitation_code not in invitation_codes:
-            raise HTTPException(status_code=400, detail="Name is already used")
+            raise HTTPException(status_code=401, detail="Invalid invitation code")
         extra = {"invitation": user.invitation_code}
     else:
         extra = None
