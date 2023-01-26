@@ -1,10 +1,14 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from app.ops.audit_log import add_audit_log
 from ..db import models
 from .. import schemas
 import bcrypt
+
+
+def get_all_users(db: Session) -> List[models.User]:
+    return db.query(models.User).all()
 
 
 def get_user_by_name(db: Session, name: str) -> models.User:
