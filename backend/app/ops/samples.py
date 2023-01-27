@@ -7,6 +7,7 @@ from shutil import copyfileobj
 import uuid
 import os
 import logging
+import base64
 from ..tools import ffmpeg
 
 
@@ -21,7 +22,7 @@ def configure_filestore(path: str):
 
 
 def create_sample(db: Session, file, user: User) -> int:
-    filename = str(uuid.uuid4())
+    filename = str(uuid.uuid4()).replace("-", "")
     fullpath = os.path.join(FILESTORE_PATH, filename)
     tmp_fullpath = fullpath + ".tmp"
     file.seek(0)
@@ -31,9 +32,11 @@ def create_sample(db: Session, file, user: User) -> int:
             copyfileobj(file, f)
             os.rename(tmp_fullpath, fullpath)
             size = os.path.getsize(fullpath)
-            duration = ffmpeg.check_and_fix_audio(fullpath)
+            format, duration = ffmpeg.check_and_fix_audio(fullpath)
             sample = Sample(duration=duration, owner=user.id)
-            audio_file = AudioFile(path=filename, original=True, size=size)
+            audio_file = AudioFile(
+                path=filename, original=True, size=size, format=format
+            )
             sample.audio_files.append(audio_file)
             db.add(sample)
             db.commit()
@@ -48,19 +51,36 @@ def create_sample(db: Session, file, user: User) -> int:
             raise e
 
 
+def delete_sample(db: Session, sample: Sample):
+    logger.info("Removing sample %s", sample.id)
+    for file in sample.audio_files:
+        assert not os.path.isabs(file.path)
+        logger.info("Removing file %s", file.path)
+        fullpath = os.path.join(FILESTORE_PATH, file.path)
+        if os.path.isfile(fullpath):
+            os.unlink(fullpath)
+    db.delete(sample)
+    db.commit()
+
+
 def get_samples(db: Session, user: User) -> List[Sample]:
     return db.query(Sample).filter(Sample.owner == user.id).all()
 
 
-def get_sample(db: Session, session_id: int) -> Sample:
-    return db.query(Sample).filter(Sample.id == session_id).first()
+def get_sample(db: Session, sample_id: int) -> Sample:
+    return db.query(Sample).filter(Sample.id == sample_id).first()
 
 
-def get_sample_stream(sample: Sample):
-    audio_file: AudioFile = sample.audio_files[0]
-    fullpath = os.path.join(FILESTORE_PATH, audio_file.path)
-    with open(fullpath, mode="rb") as f:
-        yield from f
+def get_file_stream(filename: str):
+    fullpath = os.path.join(FILESTORE_PATH, filename)
+    if not os.path.isfile(fullpath):
+        return None
+
+    def streamer():
+        with open(fullpath, mode="rb") as f:
+            yield from f
+
+    return streamer()
 
 
 def get_next_sample_id(db: Session, user: User) -> Optional[int]:

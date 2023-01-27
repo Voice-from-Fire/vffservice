@@ -31,7 +31,7 @@ def test_invitation_code(db_session):
             "/users",
             json={"name": "user2", "password": "abc", "invitation_code": "codeC"},
         )
-        assert r.status_code == 400
+        assert r.status_code == 401
         assert get_user_by_name(db_session, "user2") is None
     finally:
         del os.environ["VFF_INVITATION_CODES"]
