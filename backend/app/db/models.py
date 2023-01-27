@@ -92,7 +92,7 @@ class AudioFile(Base):
     sample = Column(
         Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
     )
-
+    format = Column(String, nullable=False)
     path = Column(String, nullable=False)
     original = Column(Boolean, nullable=False)
     size = Column(Integer, nullable=False)

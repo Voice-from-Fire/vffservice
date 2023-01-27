@@ -3,6 +3,7 @@ import re
 import json
 import os
 import math
+from typing import Tuple
 
 
 def _ffprobe(filename: str):
@@ -42,11 +43,12 @@ def get_duration(probe):
     return duration
 
 
-def check_and_fix_audio(filename) -> float:
+def check_and_fix_audio(filename) -> Tuple[str, float]:
     probe = _ffprobe(filename)
 
     format_name = probe.get("format_name")
     if format_name == "matroska,webm":
+        format_name = "webm"
         if "duration" not in probe:
             # Webm come without header, lets try to add header
             tmp_filename = filename + ".convert.webm"
@@ -75,4 +77,4 @@ def check_and_fix_audio(filename) -> float:
                     os.remove(tmp_filename)
     elif format_name not in ("wav",):
         raise Exception(f"Unsuported audio format: {format_name}")
-    return get_duration(probe)
+    return format_name, get_duration(probe)

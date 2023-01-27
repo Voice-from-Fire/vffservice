@@ -161,14 +161,23 @@ def get_own_samples(user=Depends(manager), db: Session = Depends(get_db)):
     return ops_samples.get_samples(db, user)
 
 
-@app.get("/samples/{sample_id}/audio", tags=["samples"])
-def get_audio(sample_id: int, user=Depends(manager), db: Session = Depends(get_db)):
+@app.delete("/samples/{sample_id}", tags=["samples"])
+def delete_sample(sample_id: int, user=Depends(manager), db: Session = Depends(get_db)):
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
     if sample.owner != user.id:
-        raise HTTPException(status_code=402)
-    stream = ops_samples.get_sample_stream(sample)
+        raise HTTPException(status_code=401)
+    ops_samples.delete_sample(db, sample)
+    return "ok"  # For flutter OpenAPI generator
+
+
+@app.get("/audio_files/{filename}", tags=["audio"])
+def get_audio(filename: str):
+    stream = ops_samples.get_file_stream(filename)
+    if stream is None:
+        raise HTTPException(status_code=404, detail="File not found")
+
     return StreamingResponse(stream)
 
 

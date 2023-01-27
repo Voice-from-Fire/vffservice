@@ -4,11 +4,21 @@ import datetime
 from pydantic import BaseModel
 
 
+class AudioFile(BaseModel):
+    path: str
+    format: str
+
+    class Config:
+        orm_mode = True
+
+
 class Sample(BaseModel):
     id: int
     duration: float
     created_at: datetime.datetime
     owner: int
+
+    audio_files: List[AudioFile]
 
     class Config:
         orm_mode = True
