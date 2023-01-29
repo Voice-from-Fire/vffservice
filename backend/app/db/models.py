@@ -24,6 +24,14 @@ import datetime
 Base = declarative_base()
 
 
+@enum.unique
+class Role(str, enum.Enum):
+    uploader = "uploader"
+    labeler = "labeler"
+    moderator = "moderator"
+    admin = "admin"
+
+
 class User(Base):
     __tablename__ = "vff_user"
 
@@ -32,9 +40,16 @@ class User(Base):
     name = Column(String, nullable=False, unique=True)
     hashed_password = Column(LargeBinary, nullable=False)
     active = Column(Boolean, nullable=False)
+    role = Column(Enum(Role), nullable=False)
 
     samples = relationship("Sample", cascade="all, delete-orphan")
     labels = relationship("Label", cascade="all, delete-orphan")
+
+    def is_moderator_or_more(self) -> bool:
+        return self.role == Role.moderator or self.role == Role.admin
+
+    def is_admin(self) -> bool:
+        return self.role == Role.admin
 
 
 @enum.unique
@@ -140,6 +155,8 @@ class LabelValue(Base):
 class EventType(enum.Enum):
     user_new = "user-new"
     user_deleted = "user-del"
+    user_deactivated = "user-deac"
+    user_role_updated = "user-role-upd"
 
     sample_new = "sample-new"
     label_new = "label-new"

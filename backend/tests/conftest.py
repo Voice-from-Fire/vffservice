@@ -1,3 +1,4 @@
+import imp
 import os
 import sys
 import pytest
@@ -6,7 +7,6 @@ import string
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import sessionmaker, Session, close_all_sessions
 
-
 TEST_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 ASSETS_DIRECTORY = os.path.join(TEST_DIRECTORY, "assets")
 ROOT_DIRECTORY = os.path.dirname(TEST_DIRECTORY)
@@ -14,6 +14,8 @@ ROOT_DIRECTORY = os.path.dirname(TEST_DIRECTORY)
 sys.path.insert(0, ROOT_DIRECTORY)
 
 from app import config
+from userutils import UserService
+
 
 config.TEST_MODE = True
 
@@ -22,6 +24,7 @@ from app import service
 from app.ops.user import create_user, remove_user
 from app.ops.samples import configure_filestore, create_sample
 from app.db import database, session as session_module
+from app.db.models import Role
 
 
 TESTUSER_USERNAME = "testuser"
@@ -64,7 +67,17 @@ def user(db_session):
         db_session,
         schemas.UserCreate(name=TESTUSER_USERNAME, password=TESTUSER_PASSWORD),
     )
-    yield user
+    return user
+
+
+@pytest.fixture()
+def admin(db_session):
+    user = create_user(
+        db_session,
+        schemas.UserCreate(name="admin", password=TESTUSER_PASSWORD),
+        role=Role.admin,
+    )
+    return user
 
 
 @pytest.fixture()
@@ -96,3 +109,8 @@ def filestorage(tmpdir):
 def sample(db_session, test_wav, user, filestorage):
     with open(test_wav, "rb") as f:
         return create_sample(db_session, f, user)
+
+
+@pytest.fixture()
+def users(db_session):
+    return UserService(db_session, service)
