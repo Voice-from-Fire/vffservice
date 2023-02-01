@@ -15,7 +15,7 @@ def get_user_by_id(db: Session, user_id: int) -> models.User:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-def get_users(db: Session) -> List[schemas.User]:
+def get_users(db: Session) -> List[models.User]:
     return db.query(models.User).all()
 
 
