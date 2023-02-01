@@ -72,15 +72,12 @@ def test_deactivate_user_not_auth(db_session, users: UserService, auth):
 def test_deactivate_user_admin(db_session, users: UserService, auth):
     user = users.new_user()
     user2 = users.new_user()
-    create_samples(db_session, user, user2)
 
-    assert db_session.query(Sample).filter(Sample.owner == user.id).count() == 2
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
     r = client.patch(f"/users/{user.id}/deactivate", headers=admin_auth)
 
     assert r.status_code == 200
-    assert db_session.query(Sample).filter(Sample.owner == user.id).count() == 0
     assert (
         db_session.query(User).filter(User.id == user.id, User.active == False).count()
         == 1

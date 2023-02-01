@@ -62,24 +62,24 @@ def deactivate_user(
     user_id: int, db: Session = Depends(get_db), user: User = Depends(manager)
 ):
     db_user = ops_user.get_user_by_id(db, user_id)
-    if db_user is not None:
-        if not user.is_moderator_or_more() or (
-            # moderator cannot deactivate admin
-            Role.admin == db_user.role
-            and not user.is_admin()
-        ):
-            raise HTTPException(status_code=403, detail="Unauthorized request")
-    else:
+    if (
+        not user.is_moderator_or_more()
+        or
+        # moderator cannot deactivate admin
+        db_user is not None
+        and Role.admin == db_user.role
+        and not user.is_admin()
+    ):
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    if db_user is None:
         raise HTTPException(
             status_code=404,
             detail="User id {} does not exist, user cannot be deactivated.".format(
                 user_id
             ),
         )
-    if user.is_admin() and db_user.id == user.id:
-        raise HTTPException(
-            status_code=403, detail="Admin user cannot deactivate themselves"
-        )
+    if db_user.id == user.id:
+        raise HTTPException(status_code=403, detail="User cannot deactivate themselves")
     ops_user.deactivate_user(db, db_user)
 
 
@@ -99,10 +99,8 @@ def update_role(
                 request.id
             ),
         )
-    if user.is_admin() and db_user.id == user.id:
-        raise HTTPException(
-            status_code=403, detail="Admin user cannot update their role"
-        )
+    if db_user.id == user.id:
+        raise HTTPException(status_code=403, detail="User cannot update their role")
     return ops_user.update_role(db, db_user, user.role)
 
 
@@ -120,10 +118,9 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 
 @app.get("/users", response_model=List[schemas.User], tags=["users"])
 def get_all_users(user: User = Depends(manager), db: Session = Depends(get_db)):
-    if user.is_moderator_or_more():
-        print(ops_user.get_users(db))
-        return ops_user.get_users(db)
-    raise HTTPException(status_code=403, detail="Unauthorized request")
+    if not user.is_moderator_or_more():
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    return ops_user.get_users(db)
 
 
 @app.post("/samples", response_model=int, tags=["samples"])

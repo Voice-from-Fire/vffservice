@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.ops.audit_log import add_audit_log
-from app.schemas.user import User
 from ..db import models
 from .. import schemas
 import bcrypt
@@ -16,7 +15,7 @@ def get_user_by_id(db: Session, user_id: int) -> models.User:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-def get_users(db: Session) -> List[User]:
+def get_users(db: Session) -> List[schemas.User]:
     return db.query(models.User).all()
 
 
@@ -49,17 +48,16 @@ def check_user_password(user: models.User, password: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), user.hashed_password)
 
 
-def deactivate_user(db: Session, user: User):
-    db.query(models.Sample).filter_by(owner=user.id).delete()
-    setattr(user, "active", False)
+def deactivate_user(db: Session, user: models.User):
+    user.active = False
     auditLog = add_audit_log(
         db, event=models.EventType.user_deactivated, user=user.id, commit=False
     )
     db.commit()
 
 
-def update_role(db: Session, user: User, role: models.Role) -> User:
-    setattr(user, "role", role)
+def update_role(db: Session, user: models.User, role: models.Role) -> models.User:
+    user.role = role
     auditLog = add_audit_log(
         db, event=models.EventType.user_role_updated, user=user.id, commit=False
     )
