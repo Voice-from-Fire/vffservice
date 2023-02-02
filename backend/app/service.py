@@ -7,7 +7,7 @@ import os
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
 from app.ops.audit_log import add_audit_log
-
+from .config import DB_HOST
 from . import schemas
 from .db.session import get_db
 from .db.models import AuditLog, Base, EventType, User, Role
@@ -20,7 +20,12 @@ from fastapi_login.exceptions import InvalidCredentialsException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+import logging
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+logger.info("DB_HOST = %s", DB_HOST)
 
 # TODO
 APP_SECRET = "todo-load-secret-from-somewhere"

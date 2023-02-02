@@ -8,7 +8,7 @@ from .. import config
 
 
 def connect_db():
-    return create_engine(f"{config.DATABASE_URL}/{config.DATABASE_NAME}")
+    return create_engine(f"{config.DATABASE_URL}/{config.DB_NAME}")
 
 
 def init_db():
@@ -16,7 +16,7 @@ def init_db():
     conn = engine.connect()
     conn.execute("commit")
     try:
-        conn.execute(f"create database {config.DATABASE_NAME}")
+        conn.execute(f"create database {config.DB_NAME}")
     except ProgrammingError as e:
         logging.warning("Database already exists.")
         raise e

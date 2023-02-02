@@ -41,7 +41,7 @@ def db_session():
     dbname = random_id("testdb")
     original = session_module._get_db
 
-    config.DATABASE_NAME = dbname
+    config.DB_NAME = dbname
     engine, conn = database.init_db()
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
