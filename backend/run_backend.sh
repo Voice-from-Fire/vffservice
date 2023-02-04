@@ -1,3 +1,4 @@
+export VFF_RUN_ENV=gcloud
 export VFF_INVITATION_CODES=test1 test2
 export DB_HOST=db
 export DB_USER=postgres
