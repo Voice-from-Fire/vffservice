@@ -54,7 +54,9 @@ app.add_middleware(
 
 
 @app.get("/users", response_model=List[schemas.User], tags=["users"])
-def get_all_users(db: Session = Depends(get_db)):
+def get_all_users(user: User = Depends(manager), db: Session = Depends(get_db)):
+    if not user.is_moderator_or_more():
+        raise HTTPException(status_code=403, detail="Unauthorized request")
     return ops_user.get_all_users(db)
 
 
@@ -140,13 +142,6 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 
     access_token = manager.create_access_token(data=dict(sub=user.name))
     return {"access_token": access_token}
-
-
-@app.get("/users", response_model=List[schemas.User], tags=["users"])
-def get_all_users(user: User = Depends(manager), db: Session = Depends(get_db)):
-    if not user.is_moderator_or_more():
-        raise HTTPException(status_code=403, detail="Unauthorized request")
-    return ops_user.get_users(db)
 
 
 @app.post("/samples", response_model=int, tags=["samples"])

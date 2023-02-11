@@ -13,7 +13,7 @@ if config.RUN_ENVIRONMENT == "gcloud":
     connector = Connector()
 
 
-def connect_db():
+def connect_db(use_database=True):
 
     if config.RUN_ENVIRONMENT == "gcloud":
 
@@ -23,7 +23,7 @@ def connect_db():
                 "pg8000",
                 user=config.DB_USER,
                 password=config.DB_PASSWORD,
-                db=config.DB_NAME,
+                db=config.DB_NAME if use_database else None,
                 ip_type=IPTypes.PUBLIC,
             )
 
@@ -32,14 +32,18 @@ def connect_db():
             creator=get_conn,
         )
     else:
-        return create_engine(f"{config.DATABASE_URL}/{config.DB_NAME}")
+        if use_database:
+            return create_engine(f"{config.DATABASE_URL}/{config.DB_NAME}")
+        else:
+            return create_engine(config.DATABASE_URL)
 
 
 def init_db():
-    engine = connect_db()
+    engine = connect_db(use_database=False)
     conn = engine.connect()
     conn.execute("commit")
     try:
+        print(f"Creating database {config.DB_NAME}")
         conn.execute(f"create database {config.DB_NAME}")
     except ProgrammingError as e:
         logging.warning("Database already exists.")

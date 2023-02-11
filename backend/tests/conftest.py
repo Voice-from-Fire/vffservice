@@ -8,6 +8,12 @@ import string
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import sessionmaker, Session, close_all_sessions
 
+os.environ["VFF_RUN_ENV"] = "local"
+os.environ["DB_HOST"] = "db"
+os.environ["DB_USER"] = "postgres"
+os.environ["DB_PASSWORD"] = "postgres"
+os.environ["DB_NAME"] = "voicedb"
+
 TEST_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 ASSETS_DIRECTORY = os.path.join(TEST_DIRECTORY, "assets")
 ROOT_DIRECTORY = os.path.dirname(TEST_DIRECTORY)

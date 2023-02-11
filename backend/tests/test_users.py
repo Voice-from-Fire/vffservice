@@ -10,7 +10,7 @@ import json
 from app.schemas.user import UserCreate
 from userutils import UserService
 
-from tests.conftest import auth, db_session, user
+from tests.conftest import user
 import os
 
 client = TestClient(app)
@@ -177,33 +177,62 @@ def test_get_all_users(
     db_session,
     users: UserService,
 ):
-    user = users.new_user()
-    user2 = users.new_user()
+    users.new_user()
+    users.new_user()
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
     r = client.get("/users", headers=admin_auth)
 
     assert r.status_code == 200
-    assert r.text.__contains__(
-        '[{"id":10,"name":"user1","role":"uploader"},{"id":11,"name":"user2","role":"uploader"},{"id":12,"name":"user3","role":"admin"}]'
-    )
+    r = r.json()
+    assert len(r) == 3
+    assert r[0]["name"] == "user1"
+    assert r[0]["role"] == "uploader"
+    assert r[1]["name"] == "user2"
+    assert r[1]["role"] == "uploader"
+    assert r[2]["name"] == "user3"
+    assert r[2]["role"] == "admin"
 
 
 def test_get_samples_of_user(
     db_session,
     users: UserService,
 ):
-    user = users.new_user()
+    user1 = users.new_user()
     user2 = users.new_user()
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
-    create_samples(db_session, user, user2)
 
-    r = client.get(f"/samples/owner/{user.id}", headers=admin_auth)
+    user1 = users.new_user()
+    db_session.add(Sample(owner=user1.id, duration=10))
+    db_session.add(Sample(owner=user1.id, duration=20))
+    user2 = users.new_user()
+    db_session.add(Sample(owner=user2.id, duration=10))
+    db_session.commit()
+
+    r = client.get(f"/samples/owner/{user1.id}", headers=admin_auth)
 
     assert r.status_code == 200
-    assert r.text.__contains__(
-        '[{"id":10,"duration":10.0,"owner":10},{"id":11,"duration":20.0,"owner":10}]'
-    )
+    r = r.json()
+    r.sort(key=lambda x: x["id"])
+
+    for x in r:
+        assert "created_at" in x
+        del x["created_at"]
+
+    assert r == [
+        {
+            "id": 10,
+            "duration": 10.0,
+            "owner": 13,
+            "audio_files": [],
+        },
+        {
+            "id": 11,
+            "duration": 20.0,
+            "owner": 13,
+            "audio_files": [],
+        },
+    ]
 
 
 def test_get_samples_of_user_not_auth(db_session, users: UserService, auth):
@@ -219,10 +248,3 @@ def test_authaccess(auth):
     assert r.status_code == 401
     r = client.get("/samples", headers=auth)
     assert r.status_code == 200
-
-
-def create_samples(db_session, user: User, user2: User):
-    db_session.add(Sample(owner=user.id, duration=10))
-    db_session.add(Sample(owner=user.id, duration=20))
-    db_session.add(Sample(owner=user2.id, duration=10))
-    db_session.commit()

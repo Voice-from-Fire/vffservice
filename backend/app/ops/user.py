@@ -20,10 +20,6 @@ def get_user_by_id(db: Session, user_id: int) -> models.User:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-def get_users(db: Session) -> List[models.User]:
-    return db.query(models.User).all()
-
-
 def remove_user(db: Session, user_id: int):
     # TODO: Delete files from storage
     db.query(models.Sample).filter_by(owner=user_id).delete()
@@ -38,7 +34,7 @@ def create_user(
     db: Session,
     user: schemas.UserCreate,
     *,
-    role: models.Role = models.Role.uploader    
+    role: models.Role = models.Role.uploader,
     extra: Optional[dict] = None,
 ) -> models.User:
     salt = bcrypt.gensalt()
