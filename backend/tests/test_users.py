@@ -125,7 +125,7 @@ def test_deactivate_user_admin(db_session, users: UserService, auth):
 
 def test_update_role_by_admin(db_session, users: UserService):
     user = users.new_user()
-    assert db_session.query(User).filter(User.role == Role.uploader).count() == 1
+    assert db_session.query(User).filter(User.role == Role.user).count() == 1
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
     r = client.patch(
         "/users/role_update", json={"id": user.id, "role": "admin"}, headers=admin_auth
@@ -165,7 +165,7 @@ def test_update_role_by_uploader(db_session, users: UserService, auth):
 
 def test_update_role_not_found(db_session, users: UserService):
     user = users.new_user()
-    assert db_session.query(User).filter(User.role == Role.uploader).count() == 1
+    assert db_session.query(User).filter(User.role == Role.user).count() == 1
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
     r = client.patch(
         "/users/role_update", json={"id": 999, "role": "admin"}, headers=admin_auth

@@ -13,7 +13,7 @@ class UserService:
         self.service = service
         self.id_counter = 0
 
-    def new_user(self, *, name=None, role=Role.uploader, auth=False):
+    def new_user(self, *, name=None, role=Role.user, auth=False):
         self.id_counter += 1
         if name is None:
             name = f"user{self.id_counter}"

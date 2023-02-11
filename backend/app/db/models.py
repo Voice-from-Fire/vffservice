@@ -27,8 +27,8 @@ Base = declarative_base()
 
 @enum.unique
 class Role(str, enum.Enum):
-    uploader = "uploader"
-    labeler = "labeler"
+    user = "user"
+    reviewer = "reviewer"
     moderator = "moderator"
     admin = "admin"
 

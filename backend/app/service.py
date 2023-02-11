@@ -141,7 +141,7 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         raise InvalidCredentialsException
 
     access_token = manager.create_access_token(data=dict(sub=user.name))
-    return {"access_token": access_token}
+    return {"access_token": access_token, "user": schemas.User.from_orm(user)}
 
 
 @app.post("/samples", response_model=int, tags=["samples"])

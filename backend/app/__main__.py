@@ -8,7 +8,7 @@ from .ops.user import create_user
 
 from .tools import ffmpeg
 from .db.database import init_db, connect_db
-from .db.models import AudioFile, Sample, Base
+from .db.models import AudioFile, Sample, Base, Role
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -33,6 +33,12 @@ def initdb(create_test_user):
         try:
             create_user(session, UserCreate(name="testuser", password="pass"))
             print("Created user 'testuser' with password 'pass'")
+            create_user(
+                session,
+                UserCreate(name="testadmin", password="pass"),
+                role=Role.admin,
+            )
+            print("Created user 'testadmin' with password 'pass'")
         except IntegrityError:
             click.echo("'testuser' already exists")
 

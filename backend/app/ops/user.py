@@ -34,7 +34,7 @@ def create_user(
     db: Session,
     user: schemas.UserCreate,
     *,
-    role: models.Role = models.Role.uploader,
+    role: models.Role = models.Role.user,
     extra: Optional[dict] = None,
 ) -> models.User:
     salt = bcrypt.gensalt()
