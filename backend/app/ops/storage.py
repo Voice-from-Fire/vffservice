@@ -10,7 +10,19 @@ if config.RUN_ENVIRONMENT == "gcloud":
     class CloudStorage:
         def __init__(self, *, project):
             self.client = storage.Client(project=project)
-            pass
+            self.bucket = self.client.get_bucket("vff-storage")
+
+        def upload_filename(self, source, target):
+            blob = self.bucket.blob(target)
+            blob.upload_from_filename(source)
+
+        def delete(self, filename):
+            blob = self.bucket.blob(filename)
+            blob.delete()
+
+        def open(self, filename):
+            blob = self.bucket.blob(filename)
+            return blob.open("rb")
 
     instance = CloudStorage(project="vffproject")
 else:

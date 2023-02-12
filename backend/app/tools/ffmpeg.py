@@ -3,7 +3,10 @@ import re
 import json
 import os
 import math
+import logging
 from typing import Tuple
+
+logger = logging.getLogger(__name__)
 
 
 def _ffprobe(filename: str):
@@ -44,6 +47,7 @@ def get_duration(probe):
 
 
 def check_and_fix_audio(filename) -> Tuple[str, float]:
+    logger.info(f"Checking filename: %s", filename)
     probe = _ffprobe(filename)
 
     format_name = probe.get("format_name")
@@ -77,4 +81,5 @@ def check_and_fix_audio(filename) -> Tuple[str, float]:
                     os.remove(tmp_filename)
     elif format_name not in ("wav",):
         raise Exception(f"Unsuported audio format: {format_name}")
+    logger.info("File detected as %s", format_name)
     return format_name, get_duration(probe)

@@ -17,6 +17,7 @@ logger = logging.Logger(__name__)
 
 
 def create_sample(db: Session, file, user: User) -> int:
+    logger.info(f"Getting sample from user {user.id}")
     filename = str(uuid.uuid4()).replace("-", "")
     file.seek(0)
     logger.info(f"Uploading file {filename} by {user.name}")
@@ -48,6 +49,8 @@ def delete_sample(db: Session, sample: Sample):
         assert not os.path.isabs(file.path)
         logger.info("Removing file %s", file.path)
         storage.instance.delete(file.path)
+        if os.path.isfile(fullpath):
+            os.unlink(fullpath)
     db.delete(sample)
     db.commit()
 
