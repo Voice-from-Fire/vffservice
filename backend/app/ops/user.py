@@ -1,8 +1,8 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from typing import List
 
-from app.ops.audit_log import add_audit_log
+
+from .auditlog import add_audit_log
 from ..db import models
 from .. import schemas
 import bcrypt

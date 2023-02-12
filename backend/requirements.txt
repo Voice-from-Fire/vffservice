@@ -9,4 +9,5 @@ python-multipart==0.0.5
 httpx==0.23.3
 httpcore==0.16.3
 cloud-sql-python-connector[pg8000]
+google-cloud-storage
 email-validator

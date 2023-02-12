@@ -5,7 +5,7 @@ from app.db.models import AuditLog, EventType
 
 import pytest
 
-from app.ops.audit_log import add_audit_log
+from app.ops.auditlog import add_audit_log
 
 
 def test_add_audit_log(db_session):

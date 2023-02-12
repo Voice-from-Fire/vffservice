@@ -29,7 +29,8 @@ config.TEST_MODE = True
 from app import schemas
 from app import service
 from app.ops.user import create_user, remove_user
-from app.ops.samples import configure_filestore, create_sample
+from app.ops.samples import create_sample
+from app.ops.storage import configure_filestore
 from app.db import database, session as session_module
 from app.db.models import Role
 

@@ -1,38 +1,32 @@
 from typing import List, Optional
 
 from ..db.models import SampleState, User, AudioFile, Sample, Label, EventType
-from app.ops.audit_log import add_audit_log
+from .. import config
+from .auditlog import add_audit_log
 from sqlalchemy.orm import Session
 from shutil import copyfileobj
 import uuid
 import os
 import logging
-import base64
 from ..tools import ffmpeg
+from . import storage
+import tempfile
 
-
-FILESTORE_PATH = "/workspace/backend/data"
 
 logger = logging.Logger(__name__)
 
 
-def configure_filestore(path: str):
-    global FILESTORE_PATH
-    FILESTORE_PATH = path
-
-
 def create_sample(db: Session, file, user: User) -> int:
     filename = str(uuid.uuid4()).replace("-", "")
-    fullpath = os.path.join(FILESTORE_PATH, filename)
-    tmp_fullpath = fullpath + ".tmp"
     file.seek(0)
     logger.info(f"Uploading file {filename} by {user.name}")
-    with open(tmp_fullpath, "wb") as f:
+    with tempfile.NamedTemporaryFile() as f:
         try:
             copyfileobj(file, f)
-            os.rename(tmp_fullpath, fullpath)
-            size = os.path.getsize(fullpath)
-            format, duration = ffmpeg.check_and_fix_audio(fullpath)
+            f.flush()
+            size = os.path.getsize(f.name)
+            format, duration = ffmpeg.check_and_fix_audio(f.name)
+            storage.instance.upload_filename(f.name, filename)
             sample = Sample(duration=duration, owner=user.id)
             audio_file = AudioFile(
                 path=filename, original=True, size=size, format=format
@@ -43,11 +37,8 @@ def create_sample(db: Session, file, user: User) -> int:
             add_audit_log(db, event=EventType.sample_new, sample=sample.id, commit=True)
             return sample.id
         except Exception as e:
-            logger.info(f"Upload fails, removing file {fullpath}")
-            add_audit_log(db, event=EventType.error, message=e, commit=True)
-            if os.path.isfile(tmp_fullpath):
-                os.unlink(tmp_fullpath)
-            os.unlink(fullpath)
+            logger.info(f"Upload fails {e}")
+            add_audit_log(db, event=EventType.error, message=str(e), commit=True)
             raise e
 
 
@@ -56,9 +47,7 @@ def delete_sample(db: Session, sample: Sample):
     for file in sample.audio_files:
         assert not os.path.isabs(file.path)
         logger.info("Removing file %s", file.path)
-        fullpath = os.path.join(FILESTORE_PATH, file.path)
-        if os.path.isfile(fullpath):
-            os.unlink(fullpath)
+        storage.instance.delete(file.path)
     db.delete(sample)
     db.commit()
 
@@ -72,15 +61,7 @@ def get_sample(db: Session, sample_id: int) -> Sample:
 
 
 def get_file_stream(filename: str):
-    fullpath = os.path.join(FILESTORE_PATH, filename)
-    if not os.path.isfile(fullpath):
-        return None
-
-    def streamer():
-        with open(fullpath, mode="rb") as f:
-            yield from f
-
-    return streamer()
+    return storage.instance.open(filename)
 
 
 def get_next_sample_id(db: Session, user: User) -> Optional[int]:

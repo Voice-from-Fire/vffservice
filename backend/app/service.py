@@ -6,7 +6,7 @@ import os
 
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
-from app.ops.audit_log import add_audit_log
+from .ops.auditlog import add_audit_log
 from .config import DB_HOST
 from . import schemas
 from .db.session import get_db
@@ -178,7 +178,11 @@ def get_audio(filename: str):
     if stream is None:
         raise HTTPException(status_code=404, detail="File not found")
 
-    return StreamingResponse(stream)
+    def streamer():
+        with stream:
+            yield from stream
+
+    return StreamingResponse(streamer())
 
 
 @app.get("/samples/next", response_model=Optional[int], tags=["samples"])

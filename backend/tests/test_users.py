@@ -149,13 +149,13 @@ def test_update_role_admin_itself(db_session, users: UserService):
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
     r = client.patch(
         "/users/role_update",
-        json={"id": _admin.id, "role": "uploader"},
+        json={"id": _admin.id, "role": "user"},
         headers=admin_auth,
     )
     assert r.status_code == 403
 
 
-def test_update_role_by_uploader(db_session, users: UserService, auth):
+def test_update_role_by_user(db_session, users: UserService, auth):
     user = users.new_user()
     r = client.patch(
         "/users/role_update", json={"id": user.id, "role": "admin"}, headers=auth
@@ -187,9 +187,9 @@ def test_get_all_users(
     r = r.json()
     assert len(r) == 3
     assert r[0]["name"] == "user1"
-    assert r[0]["role"] == "uploader"
+    assert r[0]["role"] == "user"
     assert r[1]["name"] == "user2"
-    assert r[1]["role"] == "uploader"
+    assert r[1]["role"] == "user"
     assert r[2]["name"] == "user3"
     assert r[2]["role"] == "admin"
 
