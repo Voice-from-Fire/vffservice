@@ -1,5 +1,6 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 
 from .auditlog import add_audit_log
@@ -10,6 +11,25 @@ import bcrypt
 
 def get_all_users(db: Session) -> List[models.User]:
     return db.query(models.User).all()
+
+
+def get_all_user_summaries(db: Session) -> List[schemas.UserSummary]:
+
+    print(
+        str(
+            db.query(models.User, func.count(models.Sample.id))
+            .outerjoin(models.User.samples)
+            .group_by(models.User.id)
+        )
+    )
+
+    return [
+        schemas.UserSummary(user=user, samples_count=samples_count)
+        for (user, samples_count) in db.query(models.User, func.count(models.Sample.id))
+        .outerjoin(models.User.samples)
+        .group_by(models.User.id)
+        .all()
+    ]
 
 
 def get_user_by_name(db: Session, name: str) -> models.User:

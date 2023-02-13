@@ -194,6 +194,31 @@ def test_get_all_users(
     assert r[2]["role"] == "admin"
 
 
+def test_get_all_user_summaries(
+    db_session,
+    users: UserService,
+):
+    user1 = users.new_user()
+    users.new_user()
+
+    db_session.add(Sample(owner=user1.id, duration=10))
+    db_session.add(Sample(owner=user1.id, duration=20))
+    db_session.add(Sample(owner=user1.id, duration=20))
+
+    _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
+
+    r = client.get("/users/summaries", headers=admin_auth)
+
+    assert r.status_code == 200
+    r = r.json()
+    assert len(r) == 3
+    r.sort(key=lambda x: x["user"]["id"])
+    assert r[0]["user"]["id"] == 10
+    assert r[0]["samples_count"] == 3
+    assert r[1]["user"]["id"] == 11
+    assert r[1]["samples_count"] == 0
+
+
 def test_get_samples_of_user(
     db_session,
     users: UserService,

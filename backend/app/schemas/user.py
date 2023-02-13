@@ -10,9 +10,11 @@ class UserCreate(BaseModel):
     password: str
     invitation_code: Optional[str]
 
+
 class UserRoleUpdate(BaseModel):
     id: int
     role: Role
+
 
 class User(BaseModel):
     id: int
@@ -21,3 +23,8 @@ class User(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class UserSummary(BaseModel):
+    user: User
+    samples_count: int
