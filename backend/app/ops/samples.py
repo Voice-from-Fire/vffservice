@@ -49,8 +49,6 @@ def delete_sample(db: Session, sample: Sample):
         assert not os.path.isabs(file.path)
         logger.info("Removing file %s", file.path)
         storage.instance.delete(file.path)
-        if os.path.isfile(fullpath):
-            os.unlink(fullpath)
     db.delete(sample)
     db.commit()
 
