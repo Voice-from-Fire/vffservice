@@ -83,6 +83,11 @@ class Sample(Base):
 
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
+    def anonymize(self):
+        self.owner = None
+        self.created_at = None
+        return self
+
 
 class AudioFile(Base):
     __tablename__ = "audio_file"

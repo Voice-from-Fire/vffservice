@@ -194,11 +194,15 @@ def get_audio(filename: str):
     return StreamingResponse(streamer())
 
 
-@app.get("/samples/next", response_model=Optional[int], tags=["samples"])
+@app.get("/samples/next", response_model=Optional[schemas.Sample], tags=["samples"])
 def get_next_sample_for_labelling(
     user: User = Depends(manager), db: Session = Depends(get_db)
 ):
-    return ops_samples.get_next_sample_id(db, user)
+    sample = ops_samples.get_next_sample(db, user)
+    if sample is not None:
+        return sample.anonymize()
+    else:
+        return None
 
 
 @app.get(

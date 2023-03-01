@@ -65,11 +65,10 @@ def get_file_stream(filename: str):
     return storage.instance.open(filename)
 
 
-def get_next_sample_id(db: Session, user: User) -> Optional[int]:
+def get_next_sample(db: Session, user: User) -> Optional[Sample]:
     already_labelled = db.query(Label.sample).filter(Label.creator == user.id)
-    not_labelled = db.query(Sample.id).filter(
+    not_labelled = db.query(Sample).filter(
         Sample.id.not_in(already_labelled), Sample.state != SampleState.hidden
     )
     # db.query(Label.sample).filter(Label.sample.in_(not_labelled)).group_by()
-    result = not_labelled.first()
-    return result[0] if result else None
+    return not_labelled.first()

@@ -55,6 +55,10 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
 def test_next_sample(sample, auth):
     r = client.get(f"/samples/next", headers=auth)
     assert r.status_code == 200
-    assert sample == r.json()
+    r = r.json()
+    assert sample == r["id"]
+    assert r["duration"] == pytest.approx(0.418)
+    assert r["created_at"] is None
+    assert r["owner"] is None
 
     # TODO different result

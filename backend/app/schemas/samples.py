@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from enum import Enum
 import datetime
 from pydantic import BaseModel
@@ -15,8 +15,8 @@ class AudioFile(BaseModel):
 class Sample(BaseModel):
     id: int
     duration: float
-    created_at: datetime.datetime
-    owner: int
+    created_at: Optional[datetime.datetime]
+    owner: Optional[int]
 
     audio_files: List[AudioFile]
 
