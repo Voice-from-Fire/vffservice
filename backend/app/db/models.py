@@ -106,10 +106,8 @@ class AudioFile(Base):
 @enum.unique
 class AudioStatus(enum.Enum):
     ok = "ok"
-    no_audio = "no_audio"
-    no_human = "no_human"
-    more_speakers = "more_speakers"
     invalid = "invalid"
+    skip = "skip"
 
 
 class Label(Base):
