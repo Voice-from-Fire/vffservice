@@ -119,6 +119,11 @@ def test_webm(tmpdir):
     return make_local_asset(tmpdir, "test.webm")
 
 
+@pytest.fixture()
+def test_ogg(tmpdir):
+    return make_local_asset(tmpdir, "test.ogg")
+
+
 @pytest.fixture(autouse=True)
 def filestorage(tmpdir):
     data_dir = tmpdir / "data"

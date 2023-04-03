@@ -79,7 +79,7 @@ def check_and_fix_audio(filename) -> Tuple[str, float]:
             finally:
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
-    elif format_name not in ("wav",):
+    elif format_name not in ("wav", "ogg"):
         raise Exception(f"Unsuported audio format: {format_name}")
     logger.info("File detected as %s", format_name)
     return format_name, get_duration(probe)
