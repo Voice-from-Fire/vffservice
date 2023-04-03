@@ -63,6 +63,13 @@ class SampleState(enum.Enum):
     hidden = "h"
 
 
+@enum.unique
+class Language(enum.Enum):
+    nonverbal = "NV"
+    english = "en"
+    czech = "cs"
+
+
 class Sample(Base):
     __tablename__ = "sample"
 
@@ -77,6 +84,7 @@ class Sample(Base):
     duration = Column(Float, nullable=False)
 
     state = Column(Enum(SampleState), nullable=False, default=SampleState.new)
+    language = Column(Enum(Language), nullable=False)
 
     labels = relationship("Label", cascade="all, delete-orphan")
     audio_files = relationship("AudioFile", cascade="all, delete-orphan")

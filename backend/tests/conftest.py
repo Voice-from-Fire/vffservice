@@ -135,7 +135,7 @@ def filestorage(tmpdir):
 @pytest.fixture()
 def sample(db_session, test_wav, user, filestorage):
     with open(test_wav, "rb") as f:
-        return create_sample(db_session, f, user)
+        return create_sample(db_session, f, user, "en")
 
 
 @pytest.fixture()

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from ..db.models import SampleState, User, AudioFile, Sample, Label, EventType
+from ..db.models import Language, SampleState, User, AudioFile, Sample, Label, EventType
 from .. import config
 from .auditlog import add_audit_log
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ import tempfile
 logger = logging.Logger(__name__)
 
 
-def create_sample(db: Session, file, user: User) -> int:
+def create_sample(db: Session, file, user: User, language: Language) -> int:
     logger.info(f"Getting sample from user {user.id}")
     filename = str(uuid.uuid4()).replace("-", "")
     file.seek(0)
@@ -28,7 +28,7 @@ def create_sample(db: Session, file, user: User) -> int:
             size = os.path.getsize(f.name)
             format, duration = ffmpeg.check_and_fix_audio(f.name)
             storage.instance.upload_filename(f.name, filename)
-            sample = Sample(duration=duration, owner=user.id)
+            sample = Sample(duration=duration, owner=user.id, language=language)
             audio_file = AudioFile(
                 path=filename, original=True, size=size, format=format
             )

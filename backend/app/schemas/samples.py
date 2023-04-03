@@ -3,6 +3,8 @@ from enum import Enum
 import datetime
 from pydantic import BaseModel
 
+from ..db.models import Language
+
 
 class AudioFile(BaseModel):
     path: str
@@ -15,8 +17,9 @@ class AudioFile(BaseModel):
 class Sample(BaseModel):
     id: int
     duration: float
-    created_at: Optional[datetime.datetime]
-    owner: Optional[int]
+    language: Language
+    created_at: Optional[datetime.datetime]  # Can see only moderator
+    owner: Optional[int]  # Can see only
 
     audio_files: List[AudioFile]
 

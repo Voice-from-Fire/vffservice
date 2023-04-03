@@ -13,8 +13,14 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
         files = {
             "file": ("test.wav", f, "application/octet-stream"),
             "name": (None, "xx"),
+            "language": (None, "en"),
         }
-        r = client.post("/samples", files=files, headers=auth)
+        r = client.post(
+            "/samples",
+            files=files,
+            headers=auth,
+        )
+        print(r.text)
         assert r.status_code == 200
         sample_id = r.json()
         assert isinstance(sample_id, int)
@@ -35,6 +41,7 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
     assert samples[0]["id"] == sample_id
     assert samples[0]["duration"] == pytest.approx(0.418)
     assert samples[0]["owner"] == user.id
+    assert samples[0]["language"] == "en"
 
     path = samples[0]["audio_files"][0]["path"]
     r = client.get(f"/audio_files/{path}", headers=auth)

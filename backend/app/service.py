@@ -10,7 +10,7 @@ from .ops.auditlog import add_audit_log
 from .config import DB_HOST
 from . import schemas
 from .db.session import get_db
-from .db.models import AuditLog, Base, EventType, User, Role
+from .db.models import AuditLog, Base, EventType, Language, User, Role
 from .db import database
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import JSONResponse
@@ -156,13 +156,14 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 @app.post("/samples", response_model=int, tags=["samples"])
 async def upload_sample(
     name: str = Form(),
+    language: Language = Form(),
     file: UploadFile = File(),
     user=Depends(manager),
     db: Session = Depends(get_db),
 ):
     # TODO check size of file
     # TODO compute hash and check for duplicties
-    return ops_samples.create_sample(db, file.file, user)
+    return ops_samples.create_sample(db, file.file, user, language)
 
 
 @app.get("/samples", response_model=List[schemas.Sample], tags=["samples"])
