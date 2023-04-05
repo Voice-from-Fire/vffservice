@@ -65,9 +65,9 @@ class SampleState(enum.Enum):
 
 @enum.unique
 class Language(enum.Enum):
-    nonverbal = "NV"
-    english = "en"
-    czech = "cs"
+    nv = "NV"
+    en = "en"
+    cs = "cs"
 
 
 class Sample(Base):
