@@ -81,9 +81,11 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         if user.invitation_code not in invitation_codes:
             raise HTTPException(status_code=401, detail="Invalid invitation code")
         extra = {"invitation": user.invitation_code}
+        role = Role.reviewer
     else:
         extra = None
-    new_user = ops_user.create_user(db, user, extra=extra)
+        role = Role.user
+    new_user = ops_user.create_user(db, user, extra=extra, role=role)
     return new_user
 
 
