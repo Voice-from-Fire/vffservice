@@ -79,6 +79,7 @@ class Sample(Base):
         Integer,
         ForeignKey("vff_user.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     duration = Column(Float, nullable=False)
@@ -103,7 +104,10 @@ class AudioFile(Base):
     id = Column(Integer, Identity(start=10), primary_key=True)
 
     sample = Column(
-        Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("sample.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     format = Column(String, nullable=False)
     path = Column(String, nullable=False)
@@ -124,10 +128,16 @@ class Label(Base):
     id = Column(Integer, Identity(start=10), primary_key=True)
 
     creator = Column(
-        Integer, ForeignKey("vff_user.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("vff_user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sample = Column(
-        Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("sample.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     status = Column(Enum(AudioStatus), nullable=False)
@@ -149,7 +159,9 @@ class LabelValue(Base):
     __tablename__ = "labelvalue"
 
     id = Column(Integer, Identity(start=10), primary_key=True)
-    sample = Column(Integer, ForeignKey("label.id", ondelete="CASCADE"), nullable=False)
+    sample = Column(
+        Integer, ForeignKey("label.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     label_type = Column(Enum(LabelType), nullable=False)
     label_value = Column(JSON(), nullable=False)
