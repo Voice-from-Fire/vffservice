@@ -1,15 +1,30 @@
 import os
 
-# Values: test, gcloud
-RUN_ENVIRONMENT = os.environ["VFF_RUN_ENV"]
 
-if RUN_ENVIRONMENT not in ("local", "gcloud"):
-    raise Exception(f"Invalid environment: {RUN_ENVIRONMENT}")
+# Values: local, gcloud
+DB_TYPE = os.environ["DB_TYPE"]
+
+if DB_TYPE not in ("direct", "gcloud"):
+    raise Exception(f"Invalid environment: {DB_ENVIRONMENT}")
+
+STORAGE_TYPE = os.environ["STORAGE_TYPE"]
+
+if STORAGE_TYPE not in ("local", "gcloud"):
+    raise Exception(f"Invalid environment: {DB_ENVIRONMENT}")
 
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 DB_HOST = os.environ["DB_HOST"]
 DB_USER = os.environ["DB_USER"]
 DB_NAME = os.environ["DB_NAME"]
-DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}"
+
+
+def update_db_url():
+    global DATABASE_URL
+    DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+    return DATABASE_URL
+
+
+update_db_url()
+
 
 TEST_MODE = False
