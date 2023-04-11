@@ -16,11 +16,12 @@ DB_PASSWORD = os.environ["DB_PASSWORD"]
 DB_HOST = os.environ["DB_HOST"]
 DB_USER = os.environ["DB_USER"]
 DB_NAME = os.environ["DB_NAME"]
+DB_OPTS = os.environ.get("DB_OPTS") or ""
 
 
 def update_db_url():
     global DATABASE_URL
-    DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}{DB_OPTS}"
     return DATABASE_URL
 
 

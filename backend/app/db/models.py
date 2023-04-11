@@ -38,7 +38,7 @@ class User(Base):
 
     id = Column(Integer, Identity(start=10), primary_key=True)
 
-    name = Column(String, nullable=False, unique=True)
+    name = Column(String, nullable=False, unique=True, index=True)
     hashed_password = Column(LargeBinary, nullable=False)
     active = Column(Boolean, nullable=False)
     role = Column(Enum(Role), nullable=False)
