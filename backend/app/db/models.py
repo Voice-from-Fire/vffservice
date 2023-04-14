@@ -57,13 +57,6 @@ class User(Base):
 
 
 @enum.unique
-class SampleState(enum.Enum):
-    new = "n"
-    checked = "c"
-    hidden = "h"
-
-
-@enum.unique
 class Language(enum.Enum):
     nv = "NV"
     en = "en"
@@ -84,8 +77,9 @@ class Sample(Base):
 
     duration = Column(Float, nullable=False)
 
-    state = Column(Enum(SampleState), nullable=False, default=SampleState.new)
     language = Column(Enum(Language), nullable=False)
+
+    dataset = Column(String, nullable=True, index=True)
 
     labels = relationship("Label", cascade="all, delete-orphan")
     audio_files = relationship("AudioFile", cascade="all, delete-orphan")

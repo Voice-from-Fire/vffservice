@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from ..db.models import Language, SampleState, User, AudioFile, Sample, Label, EventType
+from ..db.models import Language, User, AudioFile, Sample, Label, EventType
 from .. import config
 from .auditlog import add_audit_log
 from sqlalchemy.orm import Session
@@ -68,7 +68,7 @@ def get_file_stream(filename: str):
 def get_next_sample(db: Session, user: User) -> Optional[Sample]:
     already_labelled = db.query(Label.sample).filter(Label.creator == user.id)
     not_labelled = db.query(Sample).filter(
-        Sample.id.not_in(already_labelled), Sample.state != SampleState.hidden
+        Sample.id.not_in(already_labelled), Sample.dataset.is_(None)
     )
     # db.query(Label.sample).filter(Label.sample.in_(not_labelled)).group_by()
     return not_labelled.first()
