@@ -1,8 +1,8 @@
-from app.tools.ffmpeg import _ffprobe, check_and_fix_audio
+from app.tools.ffmpeg import _ffprobe, check_and_fix_audio, QUICKTIME_STRING
 import pytest
 
 
-def test_probe(test_webm, test_wav, test_ogg):
+def test_probe(test_webm, test_wav, test_ogg, test_mov):
     probe = _ffprobe(test_webm)
     assert probe["format_name"] == "matroska,webm"
 
@@ -11,6 +11,9 @@ def test_probe(test_webm, test_wav, test_ogg):
 
     probe = _ffprobe(test_ogg)
     assert probe["format_name"] == "ogg"
+
+    probe = _ffprobe(test_mov)
+    assert probe["format_name"] == QUICKTIME_STRING
 
 
 def test_check_and_fix_audio(test_webm, test_wav, test_ogg):

@@ -127,6 +127,11 @@ def test_ogg(tmpdir):
     return make_local_asset(tmpdir, "test.ogg")
 
 
+@pytest.fixture()
+def test_mov(tmpdir):
+    return make_local_asset(tmpdir, "test.mov")
+
+
 @pytest.fixture(autouse=True)
 def filestorage(tmpdir):
     data_dir = tmpdir / "data"

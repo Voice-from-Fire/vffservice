@@ -26,7 +26,9 @@ def create_sample(db: Session, file, user: User, language: Language) -> int:
             copyfileobj(file, f)
             f.flush()
             size = os.path.getsize(f.name)
-            format, duration = ffmpeg.check_and_fix_audio(f.name)
+            format, duration = ffmpeg.check_and_fix_audio(
+                f.name, do_not_check=False  # user.name == "Evelyn"
+            )
             storage.instance.upload_filename(f.name, filename)
             sample = Sample(duration=duration, owner=user.id, language=language)
             audio_file = AudioFile(
