@@ -43,7 +43,7 @@ def test_invitation_code(db_session):
         del os.environ["VFF_INVITATION_CODES"]
 
 
-def test_create_user(db_session):
+def test_create_user_and_delete(db_session):
     password = "".join(random.choice(string.ascii_letters) for i in range(5))
     username = "testusernew" + "".join(
         random.choice(string.ascii_letters) for i in range(5)
@@ -55,6 +55,11 @@ def test_create_user(db_session):
     )
     assert r.status_code == 200
     user_id = r.json()["id"]
+
+    # sample
+    db_session.add(Sample(id=888, owner=user_id, duration=10))
+    db_session.commit()
+
     try:
         assert isinstance(user_id, int)
         assert r.json()["name"] == username
@@ -65,6 +70,7 @@ def test_create_user(db_session):
             .count()
             == 1
         )
+        assert db_session.query(Sample).filter(Sample.owner == user_id).count() == 1
     finally:
         if user_id is not None:
             remove_user(db_session, user_id)
@@ -75,6 +81,7 @@ def test_create_user(db_session):
         .count()
         == 1
     )
+    assert db_session.query(Sample).filter(Sample.owner == user_id).count() == 0
 
 
 def test_deactivate_user_not_auth(db_session, users: UserService, auth):
