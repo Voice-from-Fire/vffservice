@@ -1,7 +1,7 @@
 from app.service import app
 from app.ops.user import remove_user, get_user_by_name
 from fastapi.testclient import TestClient
-from app.db.models import AuditLog, EventType
+from app.db.models import AuditLog, EventType, Label, AudioStatus
 
 import pytest
 
@@ -27,6 +27,14 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
             == 1
         )
 
+        # label
+        r = client.post(
+            f"/samples/{sample_id}/label",
+            json={"status": "ok", "labels": [{"label_type": "g", "label_value": 20}]},
+            headers=auth,
+        )
+        assert db_session.query(Label).filter(Label.sample == sample_id).count() == 1
+
     r = client.get("/samples", headers=auth)
     assert r.status_code == 200
 
@@ -44,6 +52,7 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
 
     r = client.delete(f"/samples/{sample_id}", headers=auth)
     assert r.status_code == 200
+    assert db_session.query(Label).filter(Label.sample == sample_id).count() == 0
 
     r = client.get(f"/audio_files/{path}xx", headers=auth)
     assert r.status_code == 404

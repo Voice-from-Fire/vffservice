@@ -1,16 +1,19 @@
 from datetime import timedelta
 from typing import List, Optional
+from app.schemas.labels import LabelCreate
 from httpcore import request
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.exc import IntegrityError
 import os
 
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
+import app.ops.labels as ops_labels
 from .ops.auditlog import add_audit_log
 from .config import DB_HOST
 from . import schemas
 from .db.session import get_db
-from .db.models import AuditLog, Base, EventType, User, Role
+from .db.models import AudioStatus, AuditLog, Base, EventType, User, Role, LabelType
 from .db import database
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import JSONResponse
@@ -21,6 +24,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -213,6 +217,30 @@ def get_samples_of_user(
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return ops_samples.get_samples(db, found_user)
+
+
+@app.post("/samples/{sample_id}/label", response_model=int, tags=["labels"])
+def create_label(
+    sample_id: int,
+    label: LabelCreate,
+    user: User = Depends(manager),
+    db: Session = Depends(get_db),
+):
+    try:
+        return ops_labels.create_label(db, label, user, sample_id)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400, detail="The user already created a label for this sample."
+        )
+
+
+@app.get("/samples/{sample_id}/labels", tags=["labels"])
+def get_labels_for_sample(
+    sample_id: int, user: User = Depends(manager), db: Session = Depends(get_db)
+):
+    if not user.is_admin() and not ops_labels.is_owner(db, user, sample_id):
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    return ops_labels.get_labels_for_sample(db, sample_id)
 
 
 """
