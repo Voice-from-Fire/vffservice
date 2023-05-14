@@ -53,10 +53,6 @@ class User(Base):
         return self.role == Role.moderator or self.role == Role.admin
 
     def is_admin(self) -> bool:
-        print("role")
-        print(self.role)
-        print("role2")
-
         return self.role == Role.admin
 
 
