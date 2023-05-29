@@ -1,5 +1,6 @@
 from sqlalchemy import JSON
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 import json
 
 from app.schemas.labels import LabelCreate
@@ -31,7 +32,7 @@ def create_label(
     label: Label = Label(creator=user.id, sample=sample_id, status=label_create.status)
     label.values = [
         LabelValue(label_type=label.label_type, label_value=label.label_value)
-        for label in label_create.labels
+        for label in label_create.values
     ]
     try:
         db.add(label)
@@ -46,7 +47,12 @@ def create_label(
 
 
 def get_labels_for_sample(db: Session, sample_id: int) -> List[Label]:
-    return db.query(Label).filter(Label.sample == sample_id).all()
+    return (
+        db.query(Label)
+        .options(selectinload(Label.values))
+        .filter(Label.sample == sample_id)
+        .all()
+    )
 
 
 def delete_labels_for_sample(db: Session, sample_id: int):

@@ -13,7 +13,16 @@ from .ops.auditlog import add_audit_log
 from .config import DB_HOST
 from . import schemas
 from .db.session import get_db
-from .db.models import AudioStatus, AuditLog, Base, EventType, User, Role, LabelType
+from .db.models import (
+    AudioStatus,
+    AuditLog,
+    Base,
+    EventType,
+    Label,
+    User,
+    Role,
+    LabelType,
+)
 from .db import database
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import JSONResponse
@@ -234,7 +243,9 @@ def create_label(
         )
 
 
-@app.get("/samples/{sample_id}/labels", tags=["labels"])
+@app.get(
+    "/samples/{sample_id}/labels", response_model=List[schemas.Label], tags=["labels"]
+)
 def get_labels_for_sample(
     sample_id: int, user: User = Depends(manager), db: Session = Depends(get_db)
 ):

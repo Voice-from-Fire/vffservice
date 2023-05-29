@@ -30,7 +30,7 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
         # label
         r = client.post(
             f"/samples/{sample_id}/label",
-            json={"status": "ok", "labels": [{"label_type": "g", "label_value": 20}]},
+            json={"status": "ok", "values": [{"label_type": "g", "label_value": 20}]},
             headers=auth,
         )
         assert db_session.query(Label).filter(Label.sample == sample_id).count() == 1

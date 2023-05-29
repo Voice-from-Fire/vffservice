@@ -1,3 +1,6 @@
+from itertools import count
+import json
+from sqlalchemy import null
 from sqlalchemy.orm import Session
 from app.service import app
 from fastapi.testclient import TestClient
@@ -22,13 +25,25 @@ client = TestClient(app)
 
 sample_id: int = 888
 label_id: int = 999
+final_result = {
+    "status": "ok",
+    "id": 999,
+    "creator": 10,
+    "sample": 888,
+    "values": [
+        {
+            "label_type": "g",
+            "label_value": 10
+        }
+    ],
+}
 
 
 def test_is_owner(db_session: Session, auth, users: UserService):
     user: User = users.new_user()
     fill_data(db_session, user.id)
 
-    assert labels.is_owner(db_session, user, sample_id) == True
+    assert labels.is_owner(db_session, user, sample_id)
 
 
 def test_get_labels_for_sample_admin(db_session: Session, users: UserService):
@@ -38,6 +53,15 @@ def test_get_labels_for_sample_admin(db_session: Session, users: UserService):
     r = client.get(f"/samples/{sample_id}/labels", headers=admin_auth)
 
     assert r.status_code == 200
+    result = r.json()
+
+    assert len(result) == 1
+    result = result[0]
+
+    assert isinstance(result["created_at"], str)
+    del result["created_at"]
+
+    assert result == final_result
 
 
 def test_get_labels_for_sample_user(db_session: Session, users: UserService):
@@ -47,6 +71,15 @@ def test_get_labels_for_sample_user(db_session: Session, users: UserService):
     r = client.get(f"/samples/{sample_id}/labels", headers=user_auth)
 
     assert r.status_code == 200
+    result = r.json()
+
+    assert len(result) == 1
+    result = result[0]
+
+    assert isinstance(result["created_at"], str)
+    del result["created_at"]
+
+    assert result == final_result
 
 
 def test_get_labels_for_sample_unauthorized(
@@ -69,13 +102,13 @@ def test_create_label_and_duplicate_label(
     db_session.commit()
     r = client.post(
         f"/samples/{sample_id}/label",
-        json={"status": "ok", "labels": [{"label_type": "g", "label_value": 20}]},
+        json={"status": "ok", "values": [{"label_type": "g", "label_value": 20}]},
         headers=auth,
     )
 
-    label: Label = db_session.query(Label).filter(Label.status == AudioStatus.ok).one()
     assert r.status_code == 200
     assert db_session.query(Label).filter(Label.status == AudioStatus.ok).count() == 1
+    label: Label = db_session.query(Label).filter(Label.status == AudioStatus.ok).one()
     assert r.text == str(label.id)
     assert (
         db_session.query(AuditLog)
@@ -87,7 +120,7 @@ def test_create_label_and_duplicate_label(
     # duplicate label
     r = client.post(
         f"/samples/{sample_id}/label",
-        json={"status": "ok", "labels": [{"label_type": "g", "label_value": 20}]},
+        json={"status": "ok", "values": [{"label_type": "g", "label_value": 20}]},
         headers=auth,
     )
     assert r.status_code == 400
