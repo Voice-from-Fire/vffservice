@@ -2,7 +2,7 @@ from typing import List
 from app.service import app, create_user, deactivate_user
 from sqlalchemy.orm import Session
 from app.ops.user import get_user_by_id, remove_user, get_user_by_name
-from app.db.models import AuditLog, EventType, Sample, User, Role
+from app.db.models import AuditLog, EventType, Language, Sample, User, Role
 from fastapi.testclient import TestClient
 import random
 import string
@@ -57,7 +57,7 @@ def test_create_user_and_delete(db_session):
     user_id = r.json()["id"]
 
     # sample
-    db_session.add(Sample(id=888, owner=user_id, duration=10))
+    db_session.add(Sample(id=888, owner=user_id, duration=10, language=Language.cs))
     db_session.commit()
 
     try:
@@ -208,9 +208,9 @@ def test_get_all_user_summaries(
     user1 = users.new_user()
     users.new_user()
 
-    db_session.add(Sample(owner=user1.id, duration=10))
-    db_session.add(Sample(owner=user1.id, duration=20))
-    db_session.add(Sample(owner=user1.id, duration=20))
+    db_session.add(Sample(owner=user1.id, duration=10, language="en"))
+    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
+    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
 
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
@@ -235,10 +235,10 @@ def test_get_samples_of_user(
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
     user1 = users.new_user()
-    db_session.add(Sample(owner=user1.id, duration=10))
-    db_session.add(Sample(owner=user1.id, duration=20))
+    db_session.add(Sample(owner=user1.id, duration=10, language=Language.en))
+    db_session.add(Sample(owner=user1.id, duration=20, language=Language.cs))
     user2 = users.new_user()
-    db_session.add(Sample(owner=user2.id, duration=10))
+    db_session.add(Sample(owner=user2.id, duration=10, language=Language.nv))
     db_session.commit()
 
     r = client.get(f"/samples/owner/{user1.id}", headers=admin_auth)
@@ -256,12 +256,14 @@ def test_get_samples_of_user(
             "id": 10,
             "duration": 10.0,
             "owner": 13,
+            "language": "en",
             "audio_files": [],
         },
         {
             "id": 11,
             "duration": 20.0,
             "owner": 13,
+            "language": "cs",
             "audio_files": [],
         },
     ]

@@ -7,15 +7,14 @@ import logging
 from .. import config
 
 
-if config.RUN_ENVIRONMENT == "gcloud":
+if config.DB_TYPE == "gcloud":
     from google.cloud.sql.connector import Connector, IPTypes
 
     connector = Connector()
 
 
-def connect_db(use_database=True):
-
-    if config.RUN_ENVIRONMENT == "gcloud":
+def connect_db():
+    if config.DB_TYPE == "gcloud":
 
         def get_conn():
             return connector.connect(
@@ -32,22 +31,10 @@ def connect_db(use_database=True):
             creator=get_conn,
         )
     else:
-        if use_database:
-            return create_engine(f"{config.DATABASE_URL}/{config.DB_NAME}")
-        else:
-            return create_engine(config.DATABASE_URL)
+        return create_engine(config.DATABASE_URL)
 
 
 def init_db():
-    engine = connect_db(use_database=False)
-    conn = engine.connect()
-    conn.execute("commit")
-    try:
-        print(f"Creating database {config.DB_NAME}")
-        conn.execute(f"create database {config.DB_NAME}")
-    except ProgrammingError as e:
-        logging.warning("Database already exists.")
-        raise e
     engine = connect_db()
     Base.metadata.create_all(engine)
-    return engine, conn
+    return engine

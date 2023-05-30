@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from ..db.models import SampleState, User, AudioFile, Sample, Label, EventType
+from ..db.models import Language, User, AudioFile, Sample, Label, EventType
 from .. import config
 from .auditlog import add_audit_log
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ import tempfile
 logger = logging.Logger(__name__)
 
 
-def create_sample(db: Session, file, user: User) -> int:
+def create_sample(db: Session, file, user: User, language: Language) -> int:
     logger.info(f"Getting sample from user {user.id}")
     filename = str(uuid.uuid4()).replace("-", "")
     file.seek(0)
@@ -26,9 +26,11 @@ def create_sample(db: Session, file, user: User) -> int:
             copyfileobj(file, f)
             f.flush()
             size = os.path.getsize(f.name)
-            format, duration = ffmpeg.check_and_fix_audio(f.name)
+            format, duration = ffmpeg.check_and_fix_audio(
+                f.name, do_not_check=False  # user.name == "Evelyn"
+            )
             storage.instance.upload_filename(f.name, filename)
-            sample = Sample(duration=duration, owner=user.id)
+            sample = Sample(duration=duration, owner=user.id, language=language)
             audio_file = AudioFile(
                 path=filename, original=True, size=size, format=format
             )
@@ -65,11 +67,10 @@ def get_file_stream(filename: str):
     return storage.instance.open(filename)
 
 
-def get_next_sample_id(db: Session, user: User) -> Optional[int]:
+def get_next_sample(db: Session, user: User) -> Optional[Sample]:
     already_labelled = db.query(Label.sample).filter(Label.creator == user.id)
-    not_labelled = db.query(Sample.id).filter(
-        Sample.id.not_in(already_labelled), Sample.state != SampleState.hidden
+    not_labelled = db.query(Sample).filter(
+        Sample.id.not_in(already_labelled), Sample.dataset.is_(None)
     )
     # db.query(Label.sample).filter(Label.sample.in_(not_labelled)).group_by()
-    result = not_labelled.first()
-    return result[0] if result else None
+    return not_labelled.first()

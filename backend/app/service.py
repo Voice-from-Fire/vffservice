@@ -22,7 +22,9 @@ from .db.models import (
     User,
     Role,
     LabelType,
+    Language,
 )
+from .db.models import AuditLog, Base, EventType, Language, User, Role
 from .db import database
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import JSONResponse
@@ -94,9 +96,11 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         if user.invitation_code not in invitation_codes:
             raise HTTPException(status_code=401, detail="Invalid invitation code")
         extra = {"invitation": user.invitation_code}
+        role = Role.reviewer
     else:
         extra = None
-    new_user = ops_user.create_user(db, user, extra=extra)
+        role = Role.user
+    new_user = ops_user.create_user(db, user, extra=extra, role=role)
     return new_user
 
 
@@ -169,13 +173,14 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 @app.post("/samples", response_model=int, tags=["samples"])
 async def upload_sample(
     name: str = Form(),
+    language: Language = Form(),
     file: UploadFile = File(),
     user=Depends(manager),
     db: Session = Depends(get_db),
 ):
     # TODO check size of file
     # TODO compute hash and check for duplicties
-    return ops_samples.create_sample(db, file.file, user)
+    return ops_samples.create_sample(db, file.file, user, language)
 
 
 @app.get("/samples", response_model=List[schemas.Sample], tags=["samples"])
@@ -207,11 +212,15 @@ def get_audio(filename: str):
     return StreamingResponse(streamer())
 
 
-@app.get("/samples/next", response_model=Optional[int], tags=["samples"])
+@app.get("/samples/next", response_model=Optional[schemas.Sample], tags=["samples"])
 def get_next_sample_for_labelling(
     user: User = Depends(manager), db: Session = Depends(get_db)
 ):
-    return ops_samples.get_next_sample_id(db, user)
+    sample = ops_samples.get_next_sample(db, user)
+    if sample is not None:
+        return sample.anonymize()
+    else:
+        return None
 
 
 @app.get(

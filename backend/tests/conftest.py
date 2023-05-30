@@ -7,8 +7,10 @@ import random
 import string
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import sessionmaker, Session, close_all_sessions
+from sqlalchemy_utils.functions import create_database, drop_database
 
-os.environ["VFF_RUN_ENV"] = "local"
+os.environ["DB_TYPE"] = "direct"
+os.environ["STORAGE_TYPE"] = "local"
 os.environ["DB_HOST"] = "db"
 os.environ["DB_USER"] = "postgres"
 os.environ["DB_PASSWORD"] = "postgres"
@@ -49,7 +51,9 @@ def db_session():
     original = session_module._get_db
 
     config.DB_NAME = dbname
-    engine, conn = database.init_db()
+    url = config.update_db_url()
+    create_database(url)
+    engine = database.init_db()
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     def my_get_db():
@@ -64,8 +68,7 @@ def db_session():
     session = SessionLocal()
     yield session
     close_all_sessions()
-    conn.execute("commit")
-    conn.execute(f"DROP DATABASE {dbname} WITH (FORCE)")
+    drop_database(url)
     session_module._get_db = original
 
 
@@ -119,6 +122,16 @@ def test_webm(tmpdir):
     return make_local_asset(tmpdir, "test.webm")
 
 
+@pytest.fixture()
+def test_ogg(tmpdir):
+    return make_local_asset(tmpdir, "test.ogg")
+
+
+@pytest.fixture()
+def test_mov(tmpdir):
+    return make_local_asset(tmpdir, "test.mov")
+
+
 @pytest.fixture(autouse=True)
 def filestorage(tmpdir):
     data_dir = tmpdir / "data"
@@ -130,7 +143,7 @@ def filestorage(tmpdir):
 @pytest.fixture()
 def sample(db_session, test_wav, user, filestorage):
     with open(test_wav, "rb") as f:
-        return create_sample(db_session, f, user)
+        return create_sample(db_session, f, user, "en")
 
 
 @pytest.fixture()

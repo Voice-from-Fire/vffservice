@@ -14,7 +14,6 @@ def get_all_users(db: Session) -> List[models.User]:
 
 
 def get_all_user_summaries(db: Session) -> List[schemas.UserSummary]:
-
     print(
         str(
             db.query(models.User, func.count(models.Sample.id))

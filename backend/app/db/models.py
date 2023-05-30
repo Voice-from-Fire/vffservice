@@ -38,7 +38,7 @@ class User(Base):
 
     id = Column(Integer, Identity(start=10), primary_key=True)
 
-    name = Column(String, nullable=False, unique=True)
+    name = Column(String, nullable=False, unique=True, index=True)
     hashed_password = Column(LargeBinary, nullable=False)
     active = Column(Boolean, nullable=False)
     role = Column(Enum(Role), nullable=False)
@@ -57,10 +57,10 @@ class User(Base):
 
 
 @enum.unique
-class SampleState(enum.Enum):
-    new = "n"
-    checked = "c"
-    hidden = "h"
+class Language(enum.Enum):
+    nv = "NV"
+    en = "en"
+    cs = "cs"
 
 
 class Sample(Base):
@@ -72,16 +72,24 @@ class Sample(Base):
         Integer,
         ForeignKey("vff_user.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     duration = Column(Float, nullable=False)
 
-    state = Column(Enum(SampleState), nullable=False, default=SampleState.new)
+    language = Column(Enum(Language), nullable=False)
+
+    dataset = Column(String, nullable=True, index=True)
 
     labels = relationship("Label", cascade="all, delete-orphan")
     audio_files = relationship("AudioFile", cascade="all, delete-orphan")
 
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    def anonymize(self):
+        self.owner = None
+        self.created_at = None
+        return self
 
 
 class AudioFile(Base):
@@ -90,7 +98,10 @@ class AudioFile(Base):
     id = Column(Integer, Identity(start=10), primary_key=True)
 
     sample = Column(
-        Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("sample.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     format = Column(String, nullable=False)
     path = Column(String, nullable=False)
@@ -101,10 +112,8 @@ class AudioFile(Base):
 @enum.unique
 class AudioStatus(enum.Enum):
     ok = "ok"
-    no_audio = "no_audio"
-    no_human = "no_human"
-    more_speakers = "more_speakers"
     invalid = "invalid"
+    skip = "skip"
 
 
 class Label(Base):
@@ -113,10 +122,16 @@ class Label(Base):
     id = Column(Integer, Identity(start=10), primary_key=True)
 
     creator = Column(
-        Integer, ForeignKey("vff_user.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("vff_user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     sample = Column(
-        Integer, ForeignKey("sample.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("sample.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     status = Column(Enum(AudioStatus), nullable=False)
@@ -138,7 +153,9 @@ class LabelValue(Base):
     __tablename__ = "labelvalue"
 
     id = Column(Integer, Identity(start=10), primary_key=True)
-    sample = Column(Integer, ForeignKey("label.id", ondelete="CASCADE"), nullable=False)
+    sample = Column(
+        Integer, ForeignKey("label.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     label_type = Column(Enum(LabelType), nullable=False)
     label_value = Column(JSON(), nullable=False)

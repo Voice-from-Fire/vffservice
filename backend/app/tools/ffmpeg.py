@@ -9,6 +9,9 @@ from typing import Tuple
 logger = logging.getLogger(__name__)
 
 
+QUICKTIME_STRING = "mov,mp4,m4a,3gp,3g2,mj2"
+
+
 def _ffprobe(filename: str):
     process = subprocess.Popen(
         [
@@ -46,7 +49,7 @@ def get_duration(probe):
     return duration
 
 
-def check_and_fix_audio(filename) -> Tuple[str, float]:
+def check_and_fix_audio(filename, do_not_check=False) -> Tuple[str, float]:
     logger.info(f"Checking filename: %s", filename)
     probe = _ffprobe(filename)
 
@@ -79,7 +82,7 @@ def check_and_fix_audio(filename) -> Tuple[str, float]:
             finally:
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
-    elif format_name not in ("wav",):
+    elif format_name not in ("wav", "ogg", QUICKTIME_STRING) and not do_not_check:
         raise Exception(f"Unsuported audio format: {format_name}")
     logger.info("File detected as %s", format_name)
     return format_name, get_duration(probe)

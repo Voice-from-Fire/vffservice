@@ -11,6 +11,7 @@ from app.db.models import (
     Label,
     LabelType,
     LabelValue,
+    Language,
     Role,
     Sample,
     EventType,
@@ -30,12 +31,7 @@ final_result = {
     "id": 999,
     "creator": 10,
     "sample": 888,
-    "values": [
-        {
-            "label_type": "g",
-            "label_value": 10
-        }
-    ],
+    "values": [{"label_type": "g", "label_value": 10}],
 }
 
 
@@ -98,7 +94,9 @@ def test_create_label_and_duplicate_label(
 ):
     assert db_session.query(Label).filter(Label.status == AudioStatus.ok).count() == 0
     user: User = users.new_user()
-    db_session.add(Sample(id=sample_id, owner=user.id, duration=10))
+    db_session.add(
+        Sample(id=sample_id, owner=user.id, duration=10, language=Language.en)
+    )
     db_session.commit()
     r = client.post(
         f"/samples/{sample_id}/label",
@@ -145,7 +143,9 @@ def test_delete_labels_for_sample(db_session: Session, auth, users: UserService)
 def fill_data(
     db_session, user_id: int, sample_id: int = sample_id, label_id: int = label_id
 ):
-    db_session.add(Sample(id=sample_id, owner=user_id, duration=10))
+    db_session.add(
+        Sample(id=sample_id, owner=user_id, duration=10, language=Language.cs)
+    )
     db_session.commit()
     db_session.add(create_label(user_id, sample_id, label_id))
     db_session.commit()

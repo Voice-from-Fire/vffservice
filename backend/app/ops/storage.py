@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-if config.RUN_ENVIRONMENT == "gcloud":
+if config.STORAGE_TYPE == "gcloud":
     from google.cloud import storage
 
     class CloudStorage:

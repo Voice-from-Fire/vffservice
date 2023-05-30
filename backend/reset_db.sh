@@ -1,11 +1,9 @@
-export VFF_RUN_ENV=local
-export VFF_INVITATION_CODES=test1 test2
-export DB_HOST=db
-export DB_USER=postgres
-export DB_PASSWORD=postgres
-export DB_NAME=voicedb
+#!/bin/bash
+set -e
 
+source envs/env.sh
 
-export PGPASSWORD=postgres
-psql -U postgres -h db -c "DROP DATABASE voicedb;"
+export PGPASSWORD=$DB_PASSWORD
+psql -U $DB_USER -h $DB_HOST -c "DROP DATABASE $DB_NAME" || true
+psql -U $DB_USER -h $DB_HOST -c "CREATE DATABASE $DB_NAME"
 python3 -m app initdb --create-test-user

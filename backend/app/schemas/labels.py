@@ -8,9 +8,10 @@ from app.db.models import AudioStatus, LabelType
 class LabelTypeAndValue(BaseModel):
     label_type: LabelType
     label_value: int
-    
+
     class Config:
         orm_mode = True
+
 
 class LabelCreate(BaseModel):
     status: AudioStatus

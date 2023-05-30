@@ -7,7 +7,6 @@ from app.schemas.labels import LabelCreate
 
 from ..db.models import (
     LabelValue,
-    SampleState,
     User,
     Sample,
     Label,
