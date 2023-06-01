@@ -8,6 +8,7 @@ from httpcore import request
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 import os
+import os.path
 
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
@@ -228,7 +229,12 @@ def get_audio(filename: str, db: Session = Depends(get_db), user=Depends(manager
         with stream:
             yield from stream
 
-    return StreamingResponse(streamer())
+    ext = os.path.splitext(filename)[1]
+    if ext:
+        media_type = "audio/" + ext[1:]
+    else:
+        media_type = "application/octet-stream"
+    return StreamingResponse(streamer(), media_type=media_type)
 
 
 @app.get("/samples/next", response_model=Optional[schemas.Sample], tags=["samples"])
