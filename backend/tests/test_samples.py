@@ -54,6 +54,7 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
     path = samples[0]["audio_files"][0]["path"]
     r = client.get(f"/audio_files/{path}", headers=auth)
     assert r.status_code == 200
+    assert r.headers["content-type"] == "application/octet-stream"
     with open(test_wav, "rb") as f:
         assert r.content == f.read()
 
