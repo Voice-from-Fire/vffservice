@@ -170,17 +170,22 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     return {"access_token": access_token, "user": schemas.User.from_orm(user)}
 
 
+# !!! language does not have Language because of typescript openapi generator
+# is broken and generates wrong code when enum is top level value
 @app.post("/samples", response_model=int, tags=["samples"])
 async def upload_sample(
-    name: str = Form(),
-    language: Language = Form(),
+    language: str = Form(),
     file: UploadFile = File(),
     user=Depends(manager),
     db: Session = Depends(get_db),
 ):
+    try:
+        lang = Language(language)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid language")
     # TODO check size of file
     # TODO compute hash and check for duplicties
-    return ops_samples.create_sample(db, file.file, user, language)
+    return ops_samples.create_sample(db, file.file, user, lang)
 
 
 @app.get("/samples", response_model=List[schemas.Sample], tags=["samples"])

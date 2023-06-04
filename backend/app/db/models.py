@@ -145,7 +145,7 @@ class Label(Base):
 
 @enum.unique
 class LabelType(enum.Enum):
-    gt_gender = "G"
+    gt_gender = "t"
     gender = "g"
 
 
