@@ -12,6 +12,11 @@ STORAGE_TYPE = os.environ["STORAGE_TYPE"]
 if STORAGE_TYPE not in ("local", "gcloud"):
     raise Exception(f"Invalid environment: {DB_ENVIRONMENT}")
 
+if STORAGE_TYPE == "gcloud":
+    STORAGE_BUCKET = os.environ.get("STORAGE_BUCKET") or "vff-storage"
+else:
+    STORAGE_BUCKET = None
+
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 DB_HOST = os.environ["DB_HOST"]
 DB_USER = os.environ["DB_USER"]
