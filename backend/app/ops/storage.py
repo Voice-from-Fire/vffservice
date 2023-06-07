@@ -10,7 +10,7 @@ if config.STORAGE_TYPE == "gcloud":
     class CloudStorage:
         def __init__(self, *, project):
             self.client = storage.Client(project=project)
-            self.bucket = self.client.get_bucket("vff-storage")
+            self.bucket = self.client.get_bucket(config.STORAGE_BUCKET)
 
         def upload_filename(self, source, target):
             blob = self.bucket.blob(target)
