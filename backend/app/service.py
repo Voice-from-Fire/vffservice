@@ -10,6 +10,7 @@ import os.path
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
 import app.ops.labels as ops_labels
+from .schemas.user import UserPasswordUpdate
 from .ops.auditlog import add_audit_log
 from .config import DB_HOST
 from . import schemas
@@ -145,6 +146,23 @@ def deactivate_user(
     if db_user.id == user.id:
         raise HTTPException(status_code=403, detail="User cannot deactivate themselves")
     ops_user.deactivate_user(db, db_user)
+
+
+@app.patch("/users/password", tags=["users"])
+def update_password(
+    target: UserPasswordUpdate,
+    user: User = Depends(manager),
+    db: Session = Depends(get_db),
+):
+    if not user.is_admin():
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    target_user = ops_user.get_user_by_id(db, target.id)
+    if target_user is None:
+        raise HTTPException(
+            status_code=404, detail="User id {} does not exist".format(target.id)
+        )
+    logger.info("User %s changes password of %s", user.name, target_user.name)
+    ops_user.update_password(db, target_user, target.password)
 
 
 @app.patch("/users/role_update", tags=["users"])
