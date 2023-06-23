@@ -7,6 +7,9 @@ from .auditlog import add_audit_log
 from ..db import models
 from .. import schemas
 import bcrypt
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def get_all_users(db: Session) -> List[models.User]:
@@ -70,6 +73,15 @@ def create_user(
     db.commit()
     db.refresh(user)
     add_audit_log(db, event=models.EventType.user_new, user=user.id, commit=True)
+    return user
+
+
+def update_password(db: Session, user: models.User, password: str):
+    log.info("Changing password for user %s (%s)", user.name, user.id)
+    salt = bcrypt.gensalt()
+    user.hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
+    db.add(user)
+    db.commit()
     return user
 
 

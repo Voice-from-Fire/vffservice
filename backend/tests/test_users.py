@@ -1,4 +1,7 @@
 from typing import List
+import fastapi
+
+import pytest
 from app.service import app, create_user, deactivate_user
 from sqlalchemy.orm import Session
 from app.ops.user import get_user_by_id, remove_user, get_user_by_name
@@ -267,6 +270,52 @@ def test_get_samples_of_user(
             "audio_files": [],
         },
     ]
+
+
+def test_change_password_invalid(db_session, users: UserService):
+    _user, auth = users.new_user(role=Role.moderator, auth=True)
+    target_user = users.new_user(name="user123")
+
+    r = client.patch(
+        f"/users/password",
+        headers=auth,
+        json={"id": target_user.id, "password": "xxxNEWPASSWORD"},
+    )
+    assert r.status_code == 403
+
+    from app import service
+    from fastapi.security import OAuth2PasswordRequestForm
+
+    with pytest.raises(fastapi.exceptions.HTTPException):
+        service.login(
+            data=OAuth2PasswordRequestForm(
+                username="user123", password="xxxNEWPASSWORD", scope=""
+            ),
+            db=db_session,
+        )
+
+
+def test_change_password_ok(db_session, users: UserService):
+    _user, auth = users.new_user(role=Role.admin, auth=True)
+    target_user = users.new_user(name="user123")
+
+    r = client.patch(
+        f"/users/password",
+        headers=auth,
+        json={"id": target_user.id, "password": "xxxNEWPASSWORD"},
+    )
+    assert r.status_code == 200
+
+    from app import service
+    from fastapi.security import OAuth2PasswordRequestForm
+
+    response = service.login(
+        data=OAuth2PasswordRequestForm(
+            username="user123", password="xxxNEWPASSWORD", scope=""
+        ),
+        db=db_session,
+    )
+    assert isinstance(response["access_token"], str) and response["access_token"]
 
 
 def test_get_samples_of_user_not_auth(db_session, users: UserService, auth):
