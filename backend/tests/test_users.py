@@ -312,6 +312,7 @@ def test_change_password_invalid(db_session, users: UserService):
 
     with pytest.raises(fastapi.exceptions.HTTPException):
         service.login(
+            response=fastapi.Response(),
             data=OAuth2PasswordRequestForm(
                 username="user123", password="xxxNEWPASSWORD", scope=""
             ),
@@ -335,6 +336,7 @@ def test_change_password_ok(db_session: Session, users: UserService):
 
     db_session.expire_all()  # invalidates SQLAlchemy caching
     response = service.login(
+        response=fastapi.Response(),
         data=OAuth2PasswordRequestForm(
             username="user123", password="xxxNEWPASSWORD", scope=""
         ),
