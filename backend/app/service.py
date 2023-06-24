@@ -92,6 +92,15 @@ def get_all_user_summaries(
     return ops_user.get_all_user_summaries(db)
 
 
+@app.get("/users/{user_id}", response_model=schemas.User, tags=["users"])
+def get_user(
+    user_id: int, user: User = Depends(manager), db: Session = Depends(get_db)
+):
+    if not user.is_moderator_or_more():
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    return ops_user.get_user_by_id(db, user_id)
+
+
 @app.post("/users", response_model=schemas.User, tags=["users"])
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = ops_user.get_user_by_name(db, user.name)
