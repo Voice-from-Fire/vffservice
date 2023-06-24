@@ -180,25 +180,25 @@ def update_password(
     ops_user.update_password(db, target_user, target.password)
 
 
-@app.patch("/users/role_update", tags=["users"])
+@app.patch("/users/role_update", response_model=schemas.User, tags=["users"])
 def update_role(
-    request: schemas.UserRoleUpdate,
+    update: schemas.UserRoleUpdate,
     db: Session = Depends(get_db),
     user: User = Depends(manager),
 ):
     if not user.is_admin():
         raise HTTPException(status_code=403, detail="Unauthorized request")
-    db_user = ops_user.get_user_by_id(db, request.id)
+    db_user = ops_user.get_user_by_id(db, update.id)
     if db_user is None:
         raise HTTPException(
             status_code=404,
             detail="User id {} does not exist, role cannot be updated.".format(
-                request.id
+                update.id
             ),
         )
     if db_user.id == user.id:
         raise HTTPException(status_code=403, detail="User cannot update their role")
-    return ops_user.update_role(db, db_user, user.role)
+    return ops_user.update_role(db, db_user, update.role)
 
 
 @app.post("/auth/token", tags=["users"])
