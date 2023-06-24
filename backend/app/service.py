@@ -11,6 +11,7 @@ import app.ops.user as ops_user
 import app.ops.samples as ops_samples
 import app.ops.labels as ops_labels
 from .schemas.user import UserPasswordUpdate
+from .auth import can_access_sample
 from .ops.auditlog import add_audit_log
 from .config import DB_HOST
 from . import schemas
@@ -264,7 +265,14 @@ def delete_sample(sample_id: int, user=Depends(manager), db: Session = Depends(g
 
 
 @app.get("/audio_files/{filename}", tags=["audio"])
-def get_audio(filename: str):
+def get_audio(filename: str, db: Session = Depends(get_db), user=Depends(manager)):
+    audio_file = ops_samples.get_audio_by_filename(db, filename=filename)
+    if audio_file is None:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not can_access_sample(user, audio_file.sample):
+        raise HTTPException(status_code=401, detail="You cannot access this file")
+
     stream = ops_samples.get_file_stream(filename)
     if stream is None:
         raise HTTPException(status_code=404, detail="File not found")

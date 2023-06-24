@@ -74,3 +74,7 @@ def get_next_sample(db: Session, user: User) -> Optional[Sample]:
     )
     # db.query(Label.sample).filter(Label.sample.in_(not_labelled)).group_by()
     return not_labelled.first()
+
+
+def get_audio_by_filename(db: Session, filename: str) -> Optional[AudioFile]:
+    return db.query(AudioFile).filter(AudioFile.path == filename).first()
