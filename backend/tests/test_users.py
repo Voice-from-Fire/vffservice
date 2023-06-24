@@ -183,6 +183,19 @@ def test_update_role_not_found(db_session, users: UserService):
     assert r.status_code == 404
 
 
+def test_get_user(db_session, users):
+    user1, auth = users.new_user(role=Role.admin, auth=True)
+    user2 = users.new_user()
+
+    r = client.get(f"/users/{user1.id}", headers=auth)
+    assert r.json()["name"] == user1.name
+    assert r.json()["role"] == user1.role
+
+    r = client.get(f"/users/{user2.id}", headers=auth)
+    assert r.json()["name"] == user2.name
+    assert r.json()["role"] == user2.role
+
+
 def test_get_all_users(
     db_session,
     users: UserService,
