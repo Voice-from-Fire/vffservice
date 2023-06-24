@@ -14,7 +14,7 @@ from sqlalchemy import (
     JSON,
     CheckConstraint,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, Mapped
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import EmailType
 
@@ -49,6 +49,9 @@ class User(Base):
     samples = relationship("Sample", cascade="all, delete-orphan")
     labels = relationship("Label", cascade="all, delete-orphan")
 
+    def is_reviewer_or_more(self) -> bool:
+        return self.role == Role.reviewer or self.is_moderator_or_more()
+
     def is_moderator_or_more(self) -> bool:
         return self.role == Role.moderator or self.role == Role.admin
 
@@ -82,7 +85,7 @@ class Sample(Base):
     dataset = Column(String, nullable=True, index=True)
 
     labels = relationship("Label", cascade="all, delete-orphan")
-    audio_files = relationship("AudioFile", cascade="all, delete-orphan")
+    audio_files = relationship("AudioFile", cascade="all, delete-orphan", back_populates="sample")
 
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
@@ -97,12 +100,14 @@ class AudioFile(Base):
 
     id = Column(Integer, Identity(start=10), primary_key=True)
 
-    sample = Column(
+    sample_id = Column(
         Integer,
         ForeignKey("sample.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+    sample: Mapped["Sample"] = relationship()
+
     format = Column(String, nullable=False)
     path = Column(String, nullable=False)
     original = Column(Boolean, nullable=False)
