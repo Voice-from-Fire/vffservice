@@ -78,3 +78,10 @@ def test_next_sample(sample, auth):
     assert r["owner"] is None
 
     # TODO different result
+
+
+def test_login_with_cookie(sample, auth):
+    r = client.get("/samples/next", cookies={
+        "vff-session": auth["Authorization"][len("Bearer "):]
+    })
+    assert r.status_code == 200

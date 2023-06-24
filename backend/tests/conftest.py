@@ -5,6 +5,8 @@ import sys
 import pytest
 import random
 import string
+
+from fastapi import Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import sessionmaker, Session, close_all_sessions
 from sqlalchemy_utils.functions import create_database, drop_database
@@ -94,6 +96,7 @@ def admin(db_session):
 @pytest.fixture()
 def auth(user, db_session):
     response = service.login(
+        response=Response(),
         data=OAuth2PasswordRequestForm(
             username=user.name, password=TESTUSER_PASSWORD, scope=""
         ),

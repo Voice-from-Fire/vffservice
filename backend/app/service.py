@@ -1,5 +1,8 @@
 from datetime import timedelta
 from typing import List, Optional
+
+from fastapi import Response
+
 from app.schemas.labels import LabelCreate
 from httpcore import request
 from sqlalchemy.orm import sessionmaker, Session
@@ -49,7 +52,9 @@ APP_SECRET = "todo-load-secret-from-somewhere"
 # and therefore detect if session is timeouted, I connect silently ask for new token,
 # temporary solution is to make expiration very long.
 manager = LoginManager(
-    APP_SECRET, token_url="/auth/token", default_expiry=timedelta(hours=12)
+    APP_SECRET, token_url="/auth/token", default_expiry=timedelta(hours=12),
+    use_cookie=True,
+    cookie_name="vff-session"
 )
 
 
@@ -159,7 +164,7 @@ def update_role(
 
 
 @app.post("/auth/token", tags=["users"])
-def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(response: Response, data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = load_user(data.username, db=db)
     if not user or not user.active:
         raise InvalidCredentialsException
@@ -167,6 +172,7 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
         raise InvalidCredentialsException
 
     access_token = manager.create_access_token(data=dict(sub=user.name))
+    manager.set_cookie(response, access_token)
     return {"access_token": access_token, "user": schemas.User.from_orm(user)}
 
 

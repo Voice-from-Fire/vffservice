@@ -1,6 +1,7 @@
 from app.db.models import Role
 from app.ops.user import create_user
 from app import schemas
+from fastapi import Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 
@@ -27,6 +28,7 @@ class UserService:
             return user
 
         response = self.service.login(
+            response=Response(),
             data=OAuth2PasswordRequestForm(
                 username=name, password=TESTUSER_PASSWORD, scope=""
             ),
