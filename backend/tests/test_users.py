@@ -308,7 +308,7 @@ def test_change_password_invalid(db_session, users: UserService):
         )
 
 
-def test_change_password_ok(db_session, users: UserService):
+def test_change_password_ok(db_session: Session, users: UserService):
     _user, auth = users.new_user(role=Role.admin, auth=True)
     target_user = users.new_user(name="user123")
 
@@ -322,6 +322,7 @@ def test_change_password_ok(db_session, users: UserService):
     from app import service
     from fastapi.security import OAuth2PasswordRequestForm
 
+    db_session.expire_all()  # invalidates SQLAlchemy caching
     response = service.login(
         data=OAuth2PasswordRequestForm(
             username="user123", password="xxxNEWPASSWORD", scope=""
