@@ -1,9 +1,10 @@
-from app.service import app
-from app.ops.user import remove_user, get_user_by_name
-from fastapi.testclient import TestClient
-from app.db.models import AuditLog, EventType, Label, AudioStatus
+import datetime
 
 import pytest
+from fastapi.testclient import TestClient
+
+from app.db.models import AuditLog, EventType, Label, User
+from app.service import app
 
 client = TestClient(app)
 
@@ -78,3 +79,20 @@ def test_next_sample(sample, auth):
     assert r["owner"] is None
 
     # TODO different result
+
+
+def test_get_sample(sample: int, user: User, auth):
+    r = client.get(f"/samples/{sample}", headers=auth)
+    r.raise_for_status()
+    r = r.json()
+    assert sample == r["id"]
+    assert r["duration"] == pytest.approx(0.418)
+    assert len(r["audio_files"]) == 1
+    assert r["owner"] is user.id
+    date = datetime.datetime.fromisoformat(r["created_at"])
+    assert (datetime.datetime.utcnow() - date).total_seconds() < 5
+
+
+def test_get_sample_missing(auth):
+    r = client.get("/samples/123456789", headers=auth)
+    assert r.status_code == 404
