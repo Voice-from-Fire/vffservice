@@ -230,6 +230,28 @@ def get_own_samples(user=Depends(manager), db: Session = Depends(get_db)):
     return ops_samples.get_samples(db, user)
 
 
+# This method has to be before `get_sample`
+@app.get("/samples/next", response_model=Optional[schemas.Sample], tags=["samples"])
+def get_next_sample_for_labelling(
+        user: User = Depends(manager), db: Session = Depends(get_db)
+):
+    sample = ops_samples.get_next_sample(db, user)
+    if sample is not None:
+        return sample.anonymize()
+    else:
+        return None
+
+
+@app.get("/samples/{sample_id}", response_model=schemas.Sample, tags=["samples"])
+def get_sample(sample_id: int, user=Depends(manager), db: Session = Depends(get_db)):
+    sample = ops_samples.get_sample(db, sample_id)
+    if sample is None:
+        raise HTTPException(status_code=404, detail="Sample not found")
+    if sample.owner != user.id:
+        raise HTTPException(status_code=401)
+    return sample
+
+
 @app.delete("/samples/{sample_id}", tags=["samples"])
 def delete_sample(sample_id: int, user=Depends(manager), db: Session = Depends(get_db)):
     sample = ops_samples.get_sample(db, sample_id)
@@ -257,17 +279,6 @@ def get_audio(filename: str):
     else:
         media_type = "application/octet-stream"
     return StreamingResponse(streamer(), media_type=media_type)
-
-
-@app.get("/samples/next", response_model=Optional[schemas.Sample], tags=["samples"])
-def get_next_sample_for_labelling(
-    user: User = Depends(manager), db: Session = Depends(get_db)
-):
-    sample = ops_samples.get_next_sample(db, user)
-    if sample is not None:
-        return sample.anonymize()
-    else:
-        return None
 
 
 @app.get(
