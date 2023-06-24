@@ -19,16 +19,18 @@ def get_all_users(db: Session) -> List[models.User]:
 def get_all_user_summaries(db: Session) -> List[schemas.UserSummary]:
     print(
         str(
-            db.query(models.User, func.count(models.Sample.id))
+            db.query(models.User, func.count(models.Sample.id.distinct()), func.count(models.Label.id.distinct()))
             .outerjoin(models.User.samples)
+            .outerjoin(models.User.labels)
             .group_by(models.User.id)
         )
     )
 
     return [
-        schemas.UserSummary(user=user, samples_count=samples_count)
-        for (user, samples_count) in db.query(models.User, func.count(models.Sample.id))
+        schemas.UserSummary(user=user, samples_count=samples_count, labels_count=labels_count)
+        for (user, samples_count, labels_count) in db.query(models.User, func.count(models.Sample.id.distinct()), func.count(models.Label.id.distinct()))
         .outerjoin(models.User.samples)
+        .outerjoin(models.User.labels)
         .group_by(models.User.id)
         .all()
     ]

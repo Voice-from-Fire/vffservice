@@ -5,7 +5,7 @@ import pytest
 from app.service import app, create_user, deactivate_user
 from sqlalchemy.orm import Session
 from app.ops.user import get_user_by_id, remove_user, get_user_by_name
-from app.db.models import AuditLog, EventType, Language, Sample, User, Role
+from app.db.models import AudioStatus, AuditLog, EventType, Language, Sample, User, Role, Label
 from fastapi.testclient import TestClient
 import random
 import string
@@ -218,15 +218,22 @@ def test_get_all_users(
 
 
 def test_get_all_user_summaries(
-    db_session,
+    db_session: Session,
     users: UserService,
 ):
     user1 = users.new_user()
     users.new_user()
 
-    db_session.add(Sample(owner=user1.id, duration=10, language="en"))
-    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
-    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
+    s1, s2, s3 = (Sample(owner=user1.id, duration=10, language="en"),
+                  Sample(owner=user1.id, duration=20, language="en"),
+                  Sample(owner=user1.id, duration=20, language="en"))
+
+    s1.labels = [Label(creator=user1.id, status=AudioStatus.ok)]
+    s2.labels = [Label(creator=user1.id, status=AudioStatus.ok)]
+
+    db_session.add_all([s1, s2, s3])
+
+    db_session.commit()
 
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
@@ -238,13 +245,17 @@ def test_get_all_user_summaries(
     r.sort(key=lambda x: x["user"]["id"])
     assert r[0]["user"]["id"] == 10
     assert r[0]["samples_count"] == 3
+    assert r[0]["labels_count"] == 2
     assert r[1]["user"]["id"] == 11
     assert r[1]["samples_count"] == 0
+    assert r[1]["labels_count"] == 0
 
 
 def test_get_samples_of_user(
     db_session,
     users: UserService,
+
+
 ):
     user1 = users.new_user()
     user2 = users.new_user()

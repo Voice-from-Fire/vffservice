@@ -33,3 +33,4 @@ class User(BaseModel):
 class UserSummary(BaseModel):
     user: User
     samples_count: int
+    labels_count: int
