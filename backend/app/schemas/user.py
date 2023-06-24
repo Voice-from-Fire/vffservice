@@ -16,6 +16,11 @@ class UserRoleUpdate(BaseModel):
     role: Role
 
 
+class UserPasswordUpdate(BaseModel):
+    id: int
+    password: str
+
+
 class User(BaseModel):
     id: int
     name: str
@@ -28,3 +33,4 @@ class User(BaseModel):
 class UserSummary(BaseModel):
     user: User
     samples_count: int
+    labels_count: int

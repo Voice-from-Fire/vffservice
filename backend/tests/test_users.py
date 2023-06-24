@@ -1,8 +1,11 @@
 from typing import List
+import fastapi
+
+import pytest
 from app.service import app, create_user, deactivate_user
 from sqlalchemy.orm import Session
 from app.ops.user import get_user_by_id, remove_user, get_user_by_name
-from app.db.models import AuditLog, EventType, Language, Sample, User, Role
+from app.db.models import AudioStatus, AuditLog, EventType, Language, Sample, User, Role, Label
 from fastapi.testclient import TestClient
 import random
 import string
@@ -180,6 +183,19 @@ def test_update_role_not_found(db_session, users: UserService):
     assert r.status_code == 404
 
 
+def test_get_user(db_session, users):
+    user1, auth = users.new_user(role=Role.admin, auth=True)
+    user2 = users.new_user()
+
+    r = client.get(f"/users/{user1.id}", headers=auth)
+    assert r.json()["name"] == user1.name
+    assert r.json()["role"] == user1.role
+
+    r = client.get(f"/users/{user2.id}", headers=auth)
+    assert r.json()["name"] == user2.name
+    assert r.json()["role"] == user2.role
+
+
 def test_get_all_users(
     db_session,
     users: UserService,
@@ -202,15 +218,22 @@ def test_get_all_users(
 
 
 def test_get_all_user_summaries(
-    db_session,
+    db_session: Session,
     users: UserService,
 ):
     user1 = users.new_user()
     users.new_user()
 
-    db_session.add(Sample(owner=user1.id, duration=10, language="en"))
-    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
-    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
+    s1, s2, s3 = (Sample(owner=user1.id, duration=10, language="en"),
+                  Sample(owner=user1.id, duration=20, language="en"),
+                  Sample(owner=user1.id, duration=20, language="en"))
+
+    s1.labels = [Label(creator=user1.id, status=AudioStatus.ok)]
+    s2.labels = [Label(creator=user1.id, status=AudioStatus.ok)]
+
+    db_session.add_all([s1, s2, s3])
+
+    db_session.commit()
 
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
@@ -222,13 +245,17 @@ def test_get_all_user_summaries(
     r.sort(key=lambda x: x["user"]["id"])
     assert r[0]["user"]["id"] == 10
     assert r[0]["samples_count"] == 3
+    assert r[0]["labels_count"] == 2
     assert r[1]["user"]["id"] == 11
     assert r[1]["samples_count"] == 0
+    assert r[1]["labels_count"] == 0
 
 
 def test_get_samples_of_user(
     db_session,
     users: UserService,
+
+
 ):
     user1 = users.new_user()
     user2 = users.new_user()
@@ -267,6 +294,55 @@ def test_get_samples_of_user(
             "audio_files": [],
         },
     ]
+
+
+def test_change_password_invalid(db_session, users: UserService):
+    _user, auth = users.new_user(role=Role.moderator, auth=True)
+    target_user = users.new_user(name="user123")
+
+    r = client.patch(
+        f"/users/password",
+        headers=auth,
+        json={"id": target_user.id, "password": "xxxNEWPASSWORD"},
+    )
+    assert r.status_code == 403
+
+    from app import service
+    from fastapi.security import OAuth2PasswordRequestForm
+
+    with pytest.raises(fastapi.exceptions.HTTPException):
+        service.login(
+            response=fastapi.Response(),
+            data=OAuth2PasswordRequestForm(
+                username="user123", password="xxxNEWPASSWORD", scope=""
+            ),
+            db=db_session,
+        )
+
+
+def test_change_password_ok(db_session: Session, users: UserService):
+    _user, auth = users.new_user(role=Role.admin, auth=True)
+    target_user = users.new_user(name="user123")
+
+    r = client.patch(
+        f"/users/password",
+        headers=auth,
+        json={"id": target_user.id, "password": "xxxNEWPASSWORD"},
+    )
+    assert r.status_code == 200
+
+    from app import service
+    from fastapi.security import OAuth2PasswordRequestForm
+
+    db_session.expire_all()  # invalidates SQLAlchemy caching
+    response = service.login(
+        response=fastapi.Response(),
+        data=OAuth2PasswordRequestForm(
+            username="user123", password="xxxNEWPASSWORD", scope=""
+        ),
+        db=db_session,
+    )
+    assert isinstance(response["access_token"], str) and response["access_token"]
 
 
 def test_get_samples_of_user_not_auth(db_session, users: UserService, auth):

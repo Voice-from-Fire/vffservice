@@ -8,11 +8,13 @@ from httpcore import request
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 import os
+import os.path
 
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
 import app.ops.labels as ops_labels
 from .auth import can_access_sample
+from .schemas.user import UserPasswordUpdate
 from .ops.auditlog import add_audit_log
 from .config import DB_HOST
 from . import schemas
@@ -90,6 +92,15 @@ def get_all_user_summaries(
     return ops_user.get_all_user_summaries(db)
 
 
+@app.get("/users/{user_id}", response_model=schemas.User, tags=["users"])
+def get_user(
+    user_id: int, user: User = Depends(manager), db: Session = Depends(get_db)
+):
+    if not user.is_moderator_or_more():
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    return ops_user.get_user_by_id(db, user_id)
+
+
 @app.post("/users", response_model=schemas.User, tags=["users"])
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = ops_user.get_user_by_name(db, user.name)
@@ -102,7 +113,16 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         if user.invitation_code not in invitation_codes:
             raise HTTPException(status_code=401, detail="Invalid invitation code")
         extra = {"invitation": user.invitation_code}
-        role = Role.reviewer
+        if user.invitation_code.endswith("-a"):
+            role = Role.admin
+        elif user.invitation_code.endswith("-m"):
+            role = Role.moderator
+        elif user.invitation_code.endswith("-r"):
+            role = Role.reviewer
+        elif user.invitation_code.endswith("-u"):
+            role = Role.user
+        else:
+            role = Role.reviewer
     else:
         extra = None
         role = Role.user
@@ -143,25 +163,42 @@ def deactivate_user(
     ops_user.deactivate_user(db, db_user)
 
 
-@app.patch("/users/role_update", tags=["users"])
+@app.patch("/users/password", tags=["users"])
+def update_password(
+    target: UserPasswordUpdate,
+    user: User = Depends(manager),
+    db: Session = Depends(get_db),
+):
+    if not user.is_admin():
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    target_user = ops_user.get_user_by_id(db, target.id)
+    if target_user is None:
+        raise HTTPException(
+            status_code=404, detail="User id {} does not exist".format(target.id)
+        )
+    logger.info("User %s changes password of %s", user.name, target_user.name)
+    ops_user.update_password(db, target_user, target.password)
+
+
+@app.patch("/users/role_update", response_model=schemas.User, tags=["users"])
 def update_role(
-    request: schemas.UserRoleUpdate,
+    update: schemas.UserRoleUpdate,
     db: Session = Depends(get_db),
     user: User = Depends(manager),
 ):
     if not user.is_admin():
         raise HTTPException(status_code=403, detail="Unauthorized request")
-    db_user = ops_user.get_user_by_id(db, request.id)
+    db_user = ops_user.get_user_by_id(db, update.id)
     if db_user is None:
         raise HTTPException(
             status_code=404,
             detail="User id {} does not exist, role cannot be updated.".format(
-                request.id
+                update.id
             ),
         )
     if db_user.id == user.id:
         raise HTTPException(status_code=403, detail="User cannot update their role")
-    return ops_user.update_role(db, db_user, user.role)
+    return ops_user.update_role(db, db_user, update.role)
 
 
 @app.post("/auth/token", tags=["users"])
@@ -228,7 +265,12 @@ def get_audio(filename: str, db: Session = Depends(get_db), user=Depends(manager
         with stream:
             yield from stream
 
-    return StreamingResponse(streamer())
+    ext = os.path.splitext(filename)[1]
+    if ext:
+        media_type = "audio/" + ext[1:]
+    else:
+        media_type = "application/octet-stream"
+    return StreamingResponse(streamer(), media_type=media_type)
 
 
 @app.get("/samples/next", response_model=Optional[schemas.Sample], tags=["samples"])
