@@ -10,7 +10,7 @@ import os.path
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
 import app.ops.labels as ops_labels
-from .tools.ffmpeg import MIMETYPES
+from .tools.ffmpeg import MIMETYPES, convert_to_mp3
 from .schemas.user import UserPasswordUpdate
 from .auth import can_access_sample
 from .ops.auditlog import add_audit_log
@@ -31,7 +31,7 @@ from .db.models import (
 from .db.models import AuditLog, Base, EventType, Language, User, Role
 from .db import database
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, Form, File
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login.exceptions import InvalidCredentialsException
@@ -212,7 +212,7 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 # !!! language does not have Language because of typescript openapi generator
 # is broken and generates wrong code when enum is top level value
 @app.post("/samples", response_model=int, tags=["samples"])
-async def upload_sample(
+def upload_sample(
     language: str = Form(),
     file: UploadFile = File(),
     user=Depends(manager),
@@ -266,14 +266,12 @@ def delete_sample(sample_id: int, user=Depends(manager), db: Session = Depends(g
 
 
 @app.get("/sample/{sample_id}/audio", tags=["audio"])
-def get_original_audio(
-    sample_id: int, db: Session = Depends(get_db), user=Depends(manager)
-):
+def get_original_audio(sample_id: int, db: Session = Depends(get_db)):
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
-    if not can_access_sample(user, sample):
-        raise HTTPException(status_code=401, detail="You cannot access this file")
+    # if not can_access_sample(user, sample):
+    #    raise HTTPException(status_code=401, detail="You cannot access this file")
     stream = ops_samples.get_file_stream(sample.filename)
     if stream is None:
         raise HTTPException(status_code=404, detail="File not found")
@@ -284,6 +282,23 @@ def get_original_audio(
 
     mime_type = MIMETYPES.get(sample.format) or "application/octet-stream"
     return StreamingResponse(streamer(), media_type=mime_type)
+
+
+@app.get("/sample/{sample_id}/mp3", tags=["audio"])
+def get_mp3_audio(sample_id: int, db: Session = Depends(get_db)):
+    sample = ops_samples.get_sample(db, sample_id)
+    if sample is None:
+        raise HTTPException(status_code=404, detail="Sample not found")
+    # if not can_access_sample(user, sample):
+    #    raise HTTPException(status_code=401, detail="You cannot access this file")
+    stream = ops_samples.get_file_stream(sample.filename)
+    if stream is None:
+        raise HTTPException(status_code=404, detail="File not found")
+    with stream:
+        data = stream.read()
+    if sample.format != "mp3":
+        data = convert_to_mp3(data)
+    return HTMLResponse(data, media_type="audio/mp3")
 
 
 @app.get(

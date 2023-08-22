@@ -1,4 +1,9 @@
-from app.tools.ffmpeg import _ffprobe, check_and_fix_audio, QUICKTIME_STRING
+from app.tools.ffmpeg import (
+    _ffprobe,
+    check_and_fix_audio,
+    QUICKTIME_STRING,
+    convert_to_mp3,
+)
 import pytest
 
 
@@ -31,3 +36,10 @@ def test_check_and_fix_audio(test_webm, test_wav, test_ogg, test_mp3):
 
     output = check_and_fix_audio(test_mp3)
     assert ("mp3", pytest.approx(0.417938)) == output
+
+
+def test_convert_to_mp3(test_ogg):
+    with open(test_ogg, "rb") as f:
+        data = f.read()
+    result = convert_to_mp3(data)
+    assert result[:3] == b"ID3"

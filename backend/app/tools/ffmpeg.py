@@ -96,3 +96,14 @@ def check_and_fix_audio(filename, do_not_check=False) -> Tuple[str, float]:
         raise Exception(f"Unsuported audio format: {format_name}")
     logger.info("File detected as %s", format_name)
     return format_name, get_duration(probe)
+
+
+def convert_to_mp3(data: bytes) -> bytes:
+    p = subprocess.Popen(
+        ["ffmpeg", "-i", "pipe:", "-codec:a", "libmp3lame", "-f", "mp3", "pipe:1"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    result, _ = p.communicate(data)
+    return result
