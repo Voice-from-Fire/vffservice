@@ -85,33 +85,17 @@ class Sample(Base):
     dataset = Column(String, nullable=True, index=True)
 
     labels = relationship("Label", cascade="all, delete-orphan")
-    audio_files = relationship("AudioFile", cascade="all, delete-orphan", back_populates="sample")
 
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    filename = Column(String, nullable=False)
+    format = Column(String, nullable=False)
+    size = Column(Integer, nullable=False)
 
     def anonymize(self):
         self.owner = None
         self.created_at = None
         return self
-
-
-class AudioFile(Base):
-    __tablename__ = "audio_file"
-
-    id = Column(Integer, Identity(start=10), primary_key=True)
-
-    sample_id = Column(
-        Integer,
-        ForeignKey("sample.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    sample: Mapped["Sample"] = relationship()
-
-    format = Column(String, nullable=False)
-    path = Column(String, nullable=False)
-    original = Column(Boolean, nullable=False)
-    size = Column(Integer, nullable=False)
 
 
 @enum.unique

@@ -60,7 +60,17 @@ def test_create_user_and_delete(db_session):
     user_id = r.json()["id"]
 
     # sample
-    db_session.add(Sample(id=888, owner=user_id, duration=10, language=Language.cs))
+    db_session.add(
+        Sample(
+            id=888,
+            owner=user_id,
+            duration=10,
+            language=Language.cs,
+            format="mp3",
+            size=1,
+            filename="xxx",
+        )
+    )
     db_session.commit()
 
     try:
@@ -224,9 +234,36 @@ def test_get_all_user_summaries(
     user1 = users.new_user()
     users.new_user()
 
-    db_session.add(Sample(owner=user1.id, duration=10, language="en"))
-    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
-    db_session.add(Sample(owner=user1.id, duration=20, language="en"))
+    db_session.add(
+        Sample(
+            owner=user1.id,
+            duration=10,
+            language="en",
+            format="mp3",
+            size=2,
+            filename="fff",
+        )
+    )
+    db_session.add(
+        Sample(
+            owner=user1.id,
+            duration=20,
+            language="en",
+            format="mp3",
+            size=3,
+            filename="xyz",
+        )
+    )
+    db_session.add(
+        Sample(
+            owner=user1.id,
+            duration=20,
+            language="en",
+            format="mp3",
+            size=4,
+            filename="abc",
+        )
+    )
 
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
@@ -251,10 +288,37 @@ def test_get_samples_of_user(
     _admin, admin_auth = users.new_user(role=Role.admin, auth=True)
 
     user1 = users.new_user()
-    db_session.add(Sample(owner=user1.id, duration=10, language=Language.en))
-    db_session.add(Sample(owner=user1.id, duration=20, language=Language.cs))
+    db_session.add(
+        Sample(
+            owner=user1.id,
+            duration=10,
+            language=Language.en,
+            format="mp3",
+            size=1,
+            filename="abc",
+        )
+    )
+    db_session.add(
+        Sample(
+            owner=user1.id,
+            duration=20,
+            language=Language.cs,
+            format="mp3",
+            size=2,
+            filename="efg",
+        )
+    )
     user2 = users.new_user()
-    db_session.add(Sample(owner=user2.id, duration=10, language=Language.nv))
+    db_session.add(
+        Sample(
+            owner=user2.id,
+            duration=10,
+            language=Language.nv,
+            format="mp3",
+            size=3,
+            filename="xyz",
+        )
+    )
     db_session.commit()
 
     r = client.get(f"/samples/owner/{user1.id}", headers=admin_auth)
@@ -273,14 +337,16 @@ def test_get_samples_of_user(
             "duration": 10.0,
             "owner": 13,
             "language": "en",
-            "audio_files": [],
+            "size": 1,
+            "filename": "abc",
         },
         {
             "id": 11,
             "duration": 20.0,
             "owner": 13,
             "language": "cs",
-            "audio_files": [],
+            "size": 2,
+            "filename": "efg",
         },
     ]
 

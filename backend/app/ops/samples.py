@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from ..db.models import Language, User, AudioFile, Sample, Label, EventType
+from ..db.models import Language, User, Sample, Label, EventType
 from .. import config
 from .auditlog import add_audit_log
 from sqlalchemy.orm import Session
@@ -30,11 +30,14 @@ def create_sample(db: Session, file, user: User, language: Language) -> int:
                 f.name, do_not_check=False  # user.name == "Evelyn"
             )
             storage.instance.upload_filename(f.name, filename)
-            sample = Sample(duration=duration, owner=user.id, language=language)
-            audio_file = AudioFile(
-                path=filename, original=True, size=size, format=format
+            sample = Sample(
+                duration=duration,
+                owner=user.id,
+                language=language,
+                size=size,
+                format=format,
+                filename=filename,
             )
-            sample.audio_files.append(audio_file)
             db.add(sample)
             db.commit()
             add_audit_log(db, event=EventType.sample_new, sample=sample.id, commit=True)
@@ -47,10 +50,10 @@ def create_sample(db: Session, file, user: User, language: Language) -> int:
 
 def delete_sample(db: Session, sample: Sample):
     logger.info("Removing sample %s", sample.id)
-    for file in sample.audio_files:
-        assert not os.path.isabs(file.path)
-        logger.info("Removing file %s", file.path)
-        storage.instance.delete(file.path)
+    path = sample.filename
+    assert not os.path.isabs(path)
+    logger.info("Removing file %s", path)
+    storage.instance.delete(path)
     db.delete(sample)
     db.commit()
 
@@ -74,7 +77,3 @@ def get_next_sample(db: Session, user: User) -> Optional[Sample]:
     )
     # db.query(Label.sample).filter(Label.sample.in_(not_labelled)).group_by()
     return not_labelled.first()
-
-
-def get_audio_by_filename(db: Session, filename: str) -> Optional[AudioFile]:
-    return db.query(AudioFile).filter(AudioFile.path == filename).first()

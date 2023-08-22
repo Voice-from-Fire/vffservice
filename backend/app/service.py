@@ -10,6 +10,7 @@ import os.path
 import app.ops.user as ops_user
 import app.ops.samples as ops_samples
 import app.ops.labels as ops_labels
+from .tools.ffmpeg import MIMETYPES
 from .schemas.user import UserPasswordUpdate
 from .auth import can_access_sample
 from .ops.auditlog import add_audit_log
@@ -234,7 +235,7 @@ def get_own_samples(user=Depends(manager), db: Session = Depends(get_db)):
 # This method has to be before `get_sample`
 @app.get("/samples/next", response_model=Optional[schemas.Sample], tags=["samples"])
 def get_next_sample_for_labelling(
-        user: User = Depends(manager), db: Session = Depends(get_db)
+    user: User = Depends(manager), db: Session = Depends(get_db)
 ):
     sample = ops_samples.get_next_sample(db, user)
     if sample is not None:
@@ -264,16 +265,16 @@ def delete_sample(sample_id: int, user=Depends(manager), db: Session = Depends(g
     return "ok"  # For flutter OpenAPI generator
 
 
-@app.get("/audio_files/{filename}", tags=["audio"])
-def get_audio(filename: str, db: Session = Depends(get_db), user=Depends(manager)):
-    audio_file = ops_samples.get_audio_by_filename(db, filename=filename)
-    if audio_file is None:
-        raise HTTPException(status_code=404, detail="File not found")
-
-    if not can_access_sample(user, audio_file.sample):
+@app.get("/sample/{sample_id}/audio", tags=["audio"])
+def get_original_audio(
+    sample_id: int, db: Session = Depends(get_db), user=Depends(manager)
+):
+    sample = ops_samples.get_sample(db, sample_id)
+    if sample is None:
+        raise HTTPException(status_code=404, detail="Sample not found")
+    if not can_access_sample(user, sample):
         raise HTTPException(status_code=401, detail="You cannot access this file")
-
-    stream = ops_samples.get_file_stream(filename)
+    stream = ops_samples.get_file_stream(sample.filename)
     if stream is None:
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -281,12 +282,8 @@ def get_audio(filename: str, db: Session = Depends(get_db), user=Depends(manager
         with stream:
             yield from stream
 
-    ext = os.path.splitext(filename)[1]
-    if ext:
-        media_type = "audio/" + ext[1:]
-    else:
-        media_type = "application/octet-stream"
-    return StreamingResponse(streamer(), media_type=media_type)
+    mime_type = MIMETYPES.get(sample.format) or "application/octet-stream"
+    return StreamingResponse(streamer(), media_type=mime_type)
 
 
 @app.get(

@@ -52,10 +52,9 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
     assert samples[0]["owner"] == user.id
     assert samples[0]["language"] == "en"
 
-    path = samples[0]["audio_files"][0]["path"]
-    r = client.get(f"/audio_files/{path}", headers=auth)
+    r = client.get(f"/sample/{sample_id}/audio", headers=auth)
     assert r.status_code == 200
-    assert r.headers["content-type"] == "application/octet-stream"
+    assert r.headers["content-type"] == "audio/wav"
     with open(test_wav, "rb") as f:
         assert r.content == f.read()
 
@@ -63,7 +62,7 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
     assert r.status_code == 200
     assert db_session.query(Label).filter(Label.sample == sample_id).count() == 0
 
-    r = client.get(f"/audio_files/{path}xx", headers=auth)
+    r = client.get(f"/sample/{sample_id * 100}/audio", headers=auth)
     assert r.status_code == 404
 
     r = client.delete(f"/samples/{sample_id}", headers=auth)
@@ -71,7 +70,7 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
 
 
 def test_next_sample(sample, auth):
-    r = client.get(f"/samples/next", headers=auth)
+    r = client.get("/samples/next", headers=auth)
     assert r.status_code == 200
     r = r.json()
     assert sample == r["id"]
@@ -88,7 +87,6 @@ def test_get_sample(sample: int, user: User, auth):
     r = r.json()
     assert sample == r["id"]
     assert r["duration"] == pytest.approx(0.418)
-    assert len(r["audio_files"]) == 1
     assert r["owner"] is user.id
     date = datetime.datetime.fromisoformat(r["created_at"])
     assert (datetime.datetime.utcnow() - date).total_seconds() < 5

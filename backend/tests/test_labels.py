@@ -95,7 +95,15 @@ def test_create_label_and_duplicate_label(
     assert db_session.query(Label).filter(Label.status == AudioStatus.ok).count() == 0
     user: User = users.new_user()
     db_session.add(
-        Sample(id=sample_id, owner=user.id, duration=10, language=Language.en)
+        Sample(
+            id=sample_id,
+            owner=user.id,
+            duration=10,
+            language=Language.en,
+            format="mp3",
+            size=1,
+            filename="xxx",
+        )
     )
     db_session.commit()
     r = client.post(
@@ -144,7 +152,15 @@ def fill_data(
     db_session, user_id: int, sample_id: int = sample_id, label_id: int = label_id
 ):
     db_session.add(
-        Sample(id=sample_id, owner=user_id, duration=10, language=Language.cs)
+        Sample(
+            id=sample_id,
+            owner=user_id,
+            duration=10,
+            language=Language.cs,
+            format="mp3",
+            filename="xxx",
+            size=1,
+        )
     )
     db_session.commit()
     db_session.add(create_label(user_id, sample_id, label_id))

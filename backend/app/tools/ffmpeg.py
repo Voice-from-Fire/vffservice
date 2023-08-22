@@ -11,6 +11,14 @@ logger = logging.getLogger(__name__)
 
 QUICKTIME_STRING = "mov,mp4,m4a,3gp,3g2,mj2"
 
+MIMETYPES = {
+    "webm": "video/webm",
+    "ogg": "audio/ogg",
+    "mp3": "audio/mpeg",
+    "wav": "audio/wav",
+    QUICKTIME_STRING: "audio/quicktime",
+}
+
 
 def _ffprobe(filename: str):
     process = subprocess.Popen(
@@ -50,7 +58,7 @@ def get_duration(probe):
 
 
 def check_and_fix_audio(filename, do_not_check=False) -> Tuple[str, float]:
-    logger.info(f"Checking filename: %s", filename)
+    logger.info("Checking filename: %s", filename)
     probe = _ffprobe(filename)
 
     format_name = probe.get("format_name")
@@ -82,7 +90,9 @@ def check_and_fix_audio(filename, do_not_check=False) -> Tuple[str, float]:
             finally:
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
-    elif format_name not in ("wav", "ogg", QUICKTIME_STRING) and not do_not_check:
+    elif (
+        format_name not in ("wav", "ogg", QUICKTIME_STRING, "mp3") and not do_not_check
+    ):
         raise Exception(f"Unsuported audio format: {format_name}")
     logger.info("File detected as %s", format_name)
     return format_name, get_duration(probe)

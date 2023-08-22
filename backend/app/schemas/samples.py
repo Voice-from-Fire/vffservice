@@ -6,22 +6,15 @@ from pydantic import BaseModel
 from ..db.models import Language
 
 
-class AudioFile(BaseModel):
-    path: str
-    format: str
-
-    class Config:
-        orm_mode = True
-
-
 class Sample(BaseModel):
     id: int
     duration: float
     language: Language
     created_at: Optional[datetime.datetime]  # Can see only moderator
-    owner: Optional[int]  # Can see only
+    owner: Optional[int]  # Can see only admin
 
-    audio_files: List[AudioFile]
+    size: int
+    filename: str
 
     class Config:
         orm_mode = True
