@@ -265,11 +265,13 @@ def delete_sample(sample_id: int, user=Depends(manager), db: Session = Depends(g
     return "ok"  # For flutter OpenAPI generator
 
 
-@app.get("/sample/{sample_id}/audio", tags=["audio"])
-def get_original_audio(sample_id: int, db: Session = Depends(get_db)):
+@app.get("/sample/{sample_id}/{key}/audio", tags=["audio"])
+def get_original_audio(sample_id: int, key: str, db: Session = Depends(get_db)):
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
+    if key != sample.filename[:5]:
+        raise HTTPException(status_code=401, detail="Cannot access this file")
     # if not can_access_sample(user, sample):
     #    raise HTTPException(status_code=401, detail="You cannot access this file")
     stream = ops_samples.get_file_stream(sample.filename)
@@ -284,11 +286,13 @@ def get_original_audio(sample_id: int, db: Session = Depends(get_db)):
     return StreamingResponse(streamer(), media_type=mime_type)
 
 
-@app.get("/sample/{sample_id}/mp3", tags=["audio"])
-def get_mp3_audio(sample_id: int, db: Session = Depends(get_db)):
+@app.get("/sample/{sample_id}/{key}/mp3", tags=["audio"])
+def get_mp3_audio(sample_id: int, key: str, db: Session = Depends(get_db)):
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
+    if key != sample.filename[:5]:
+        raise HTTPException(status_code=401, detail="Cannot access this file")
     # if not can_access_sample(user, sample):
     #    raise HTTPException(status_code=401, detail="You cannot access this file")
     stream = ops_samples.get_file_stream(sample.filename)

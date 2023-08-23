@@ -52,13 +52,15 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
     assert samples[0]["owner"] == user.id
     assert samples[0]["language"] == "en"
 
-    r = client.get(f"/sample/{sample_id}/audio", headers=auth)
+    key = samples[0]["filename"][:5]
+
+    r = client.get(f"/sample/{sample_id}/{key}/audio", headers=auth)
     assert r.status_code == 200
     assert r.headers["content-type"] == "audio/wav"
     with open(test_wav, "rb") as f:
         assert r.content == f.read()
 
-    r = client.get(f"/sample/{sample_id}/mp3", headers=auth)
+    r = client.get(f"/sample/{sample_id}/{key}/mp3", headers=auth)
     assert r.status_code == 200
     assert r.headers["content-type"] == "audio/mp3"
     assert r.content[:3] == b"ID3"
@@ -67,7 +69,7 @@ def test_upload_file_and_deletes(test_wav, auth, user, db_session):
     assert r.status_code == 200
     assert db_session.query(Label).filter(Label.sample == sample_id).count() == 0
 
-    r = client.get(f"/sample/{sample_id * 100}/audio", headers=auth)
+    r = client.get(f"/sample/{sample_id * 100}/abc/audio", headers=auth)
     assert r.status_code == 404
 
     r = client.delete(f"/samples/{sample_id}", headers=auth)
