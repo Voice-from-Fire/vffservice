@@ -136,6 +136,7 @@ class Label(Base):
 class LabelType(enum.Enum):
     gt_gender = "t"
     gender = "g"
+    natural = "n"
 
 
 class LabelValue(Base):
