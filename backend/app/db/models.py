@@ -59,12 +59,6 @@ class User(Base):
         return self.role == Role.admin
 
 
-@enum.unique
-class Language(enum.Enum):
-    nv = "NV"
-    en = "en"
-    cs = "cs"
-
 
 class Sample(Base):
     __tablename__ = "sample"
@@ -80,7 +74,7 @@ class Sample(Base):
 
     duration = Column(Float, nullable=False)
 
-    language = Column(Enum(Language), nullable=False)
+    language = Column(String(2), nullable=False)
 
     dataset = Column(String, nullable=True, index=True)
 
@@ -127,16 +121,11 @@ class Label(Base):
 
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
+    version = Column(Integer, nullable=False)
+
     values = relationship("LabelValue", cascade="all, delete-orphan")
 
-    __table_args__ = (UniqueConstraint("creator", "sample", name="_creator_sample_uc"),)
-
-
-@enum.unique
-class LabelType(enum.Enum):
-    gt_gender = "t"
-    gender = "g"
-    natural = "n"
+    __table_args__ = (UniqueConstraint("creator", "sample", "version", name="_creator_sample_uc"),)
 
 
 class LabelValue(Base):
@@ -147,7 +136,7 @@ class LabelValue(Base):
         Integer, ForeignKey("label.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
-    label_type = Column(Enum(LabelType), nullable=False)
+    label_type = Column(String(4), nullable=False)
     label_value = Column(JSON(), nullable=False)
 
     begin_time = Column(Numeric(scale=3))

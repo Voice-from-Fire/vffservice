@@ -11,7 +11,6 @@ from ..db.models import (
     Sample,
     Label,
     AudioStatus,
-    LabelType,
     EventType,
     AudioStatus,
 )
@@ -26,9 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 def create_label(
-    db: Session, label_create: LabelCreate, user: User, sample_id: int
+    db: Session, label_create: LabelCreate, user: User, sample_id: int, version: int
 ) -> int:
-    label: Label = Label(creator=user.id, sample=sample_id, status=label_create.status)
+    label: Label = Label(creator=user.id, sample=sample_id, status=label_create.status, version=version)
     label.values = [
         LabelValue(label_type=label.label_type, label_value=label.label_value)
         for label in label_create.values

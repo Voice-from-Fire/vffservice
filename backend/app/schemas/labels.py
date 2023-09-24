@@ -2,11 +2,11 @@ import datetime
 from typing import List
 from pydantic import BaseModel
 
-from app.db.models import AudioStatus, LabelType
+from app.db.models import AudioStatus
 
 
 class LabelTypeAndValue(BaseModel):
-    label_type: LabelType
+    label_type: str
     label_value: int
 
     class Config:
@@ -16,6 +16,7 @@ class LabelTypeAndValue(BaseModel):
 class LabelCreate(BaseModel):
     status: AudioStatus
     values: List[LabelTypeAndValue]
+    version: int
 
 
 class Label(BaseModel):
@@ -23,6 +24,7 @@ class Label(BaseModel):
     creator: int
     sample: int
     status: AudioStatus
+    version: int
     created_at: datetime.datetime
     values: List[LabelTypeAndValue]
 

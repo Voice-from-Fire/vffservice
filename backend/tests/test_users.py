@@ -5,7 +5,7 @@ import pytest
 from app.service import app, create_user, deactivate_user
 from sqlalchemy.orm import Session
 from app.ops.user import get_user_by_id, remove_user, get_user_by_name
-from app.db.models import AuditLog, EventType, Language, Sample, User, Role
+from app.db.models import AuditLog, EventType, Sample, User, Role
 from fastapi.testclient import TestClient
 import random
 import string
@@ -65,7 +65,7 @@ def test_create_user_and_delete(db_session):
             id=888,
             owner=user_id,
             duration=10,
-            language=Language.cs,
+            language="cs",
             format="mp3",
             size=1,
             filename="xxx",
@@ -292,7 +292,7 @@ def test_get_samples_of_user(
         Sample(
             owner=user1.id,
             duration=10,
-            language=Language.en,
+            language="en",
             format="mp3",
             size=1,
             filename="abc",
@@ -302,7 +302,7 @@ def test_get_samples_of_user(
         Sample(
             owner=user1.id,
             duration=20,
-            language=Language.cs,
+            language="cs",
             format="mp3",
             size=2,
             filename="efg",
@@ -313,7 +313,7 @@ def test_get_samples_of_user(
         Sample(
             owner=user2.id,
             duration=10,
-            language=Language.nv,
+            language="NV",
             format="mp3",
             size=3,
             filename="xyz",

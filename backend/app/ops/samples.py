@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from ..db.models import Language, User, Sample, Label, EventType
+from ..db.models import User, Sample, Label, EventType
 from .. import config
 from .auditlog import add_audit_log
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ import tempfile
 logger = logging.Logger(__name__)
 
 
-def create_sample(db: Session, file, user: User, language: Language) -> int:
+def create_sample(db: Session, file, user: User, language: str) -> int:
     logger.info(f"Getting sample from user {user.id}")
     filename = str(uuid.uuid4()).replace("-", "")
     file.seek(0)

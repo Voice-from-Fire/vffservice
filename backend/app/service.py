@@ -25,10 +25,8 @@ from .db.models import (
     Label,
     User,
     Role,
-    LabelType,
-    Language,
 )
-from .db.models import AuditLog, Base, EventType, Language, User, Role
+from .db.models import AuditLog, Base, EventType, User, Role
 from .db import database
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -218,13 +216,11 @@ def upload_sample(
     user=Depends(manager),
     db: Session = Depends(get_db),
 ):
-    try:
-        lang = Language(language)
-    except ValueError:
+    if language not in ("NV", "XX", "en", "cs"):
         raise HTTPException(status_code=422, detail="Invalid language")
     # TODO check size of file
     # TODO compute hash and check for duplicties
-    return ops_samples.create_sample(db, file.file, user, lang)
+    return ops_samples.create_sample(db, file.file, user, language)
 
 
 @app.get("/samples", response_model=List[schemas.Sample], tags=["samples"])
@@ -326,8 +322,9 @@ def create_label(
     user: User = Depends(manager),
     db: Session = Depends(get_db),
 ):
+    assert label.version == 0
     try:
-        return ops_labels.create_label(db, label, user, sample_id)
+        return ops_labels.create_label(db, label, user, sample_id, label.version)
     except IntegrityError:
         raise HTTPException(
             status_code=400, detail="The user already created a label for this sample."
