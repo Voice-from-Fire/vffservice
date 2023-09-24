@@ -16,7 +16,9 @@ import tempfile
 logger = logging.Logger(__name__)
 
 
-def create_sample(db: Session, file, user: User, language: str) -> int:
+def create_sample(
+    db: Session, file, user: User, language: str, comment: str | None = None
+) -> int:
     logger.info(f"Getting sample from user {user.id}")
     filename = str(uuid.uuid4()).replace("-", "")
     file.seek(0)
@@ -37,6 +39,7 @@ def create_sample(db: Session, file, user: User, language: str) -> int:
                 size=size,
                 format=format,
                 filename=filename,
+                hidden_comment=comment,
             )
             db.add(sample)
             db.commit()

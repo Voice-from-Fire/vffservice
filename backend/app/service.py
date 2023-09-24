@@ -207,8 +207,6 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     return {"access_token": access_token, "user": schemas.User.from_orm(user)}
 
 
-# !!! language does not have Language because of typescript openapi generator
-# is broken and generates wrong code when enum is top level value
 @app.post("/samples", response_model=int, tags=["samples"])
 def upload_sample(
     language: str = Form(),

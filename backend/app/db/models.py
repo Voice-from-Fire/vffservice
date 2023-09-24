@@ -59,7 +59,6 @@ class User(Base):
         return self.role == Role.admin
 
 
-
 class Sample(Base):
     __tablename__ = "sample"
 
@@ -85,6 +84,8 @@ class Sample(Base):
     filename = Column(String, nullable=False)
     format = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
+
+    hidden_comment = Column(String, nullable=True)
 
     def anonymize(self):
         self.owner = None
@@ -125,7 +126,9 @@ class Label(Base):
 
     values = relationship("LabelValue", cascade="all, delete-orphan")
 
-    __table_args__ = (UniqueConstraint("creator", "sample", "version", name="_creator_sample_uc"),)
+    __table_args__ = (
+        UniqueConstraint("creator", "sample", "version", name="_creator_sample_uc"),
+    )
 
 
 class LabelValue(Base):

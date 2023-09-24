@@ -4,6 +4,7 @@ import json
 import os
 import math
 import logging
+import tempfile
 from typing import Tuple
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ def _ffprobe(filename: str):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
+    # print(" ".join(process.args))
     stdout, _stderr = process.communicate()
     output = json.loads(stdout)
     if "format" in output:
@@ -105,5 +107,25 @@ def convert_to_mp3(data: bytes) -> bytes:
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
-    result, _ = p.communicate(data)
+    result, _err = p.communicate(data)
+    if len(result) < 200:
+        # Conversion failed as it may need data from the end, we first write file into file
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(data)
+            f.flush()
+            p = subprocess.Popen(
+                [
+                    "ffmpeg",
+                    "-i",
+                    f.name,
+                    "-codec:a",
+                    "libmp3lame",
+                    "-f",
+                    "mp3",
+                    "pipe:1",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            result, _err = p.communicate()
     return result
