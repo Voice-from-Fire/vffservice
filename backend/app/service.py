@@ -243,7 +243,7 @@ def get_sample(sample_id: int, user=Depends(manager), db: Session = Depends(get_
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
-    if sample.owner != user.id:
+    if sample.owner != user.id and not user.is_moderator_or_more():
         raise HTTPException(status_code=401)
     return sample
 
@@ -253,7 +253,7 @@ def delete_sample(sample_id: int, user=Depends(manager), db: Session = Depends(g
     sample = ops_samples.get_sample(db, sample_id)
     if sample is None:
         raise HTTPException(status_code=404, detail="Sample not found")
-    if sample.owner != user.id:
+    if sample.owner != user.id and not user.is_admin():
         raise HTTPException(status_code=401)
     ops_samples.delete_sample(db, sample)
     return "ok"  # For flutter OpenAPI generator
